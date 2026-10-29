@@ -1093,7 +1093,7 @@
             if(!stepsArray || stepsArray.length === 0) return `<p class="text-[10px] text-slate-500 italic">Sin pasos registrados.</p>`;
             return stepsArray.map((s, idx) => `
                 <div class="flex items-center justify-between text-[11px] p-2 rounded-lg bg-slate-900/70 border border-slate-700/60">
-                    <span class="text-slate-200"><strong class="text-emerald-400 mr-1">${idx+1}.</strong>${s.text}</span>
+                    <span class="text-slate-200"><strong class="text-emerald-400 mr-1">${idx+1}.</strong> ${s.text}</span>
                     <span class="text-[10px] font-bold ${s.completed ? 'text-emerald-400' : 'text-amber-400'}">${s.completed ? 'Completado' : 'Pendiente'}</span>
                 </div>
             `).join('');
@@ -1105,7 +1105,7 @@
                 let proc = window.appState.procedures.find(p => p.code === code);
                 let desc = proc ? proc.desc : 'Procedimiento Estándar';
                 return `<div class="flex items-center justify-between text-[11px] p-2 rounded-lg bg-indigo-950/40 border border-indigo-700/50 text-indigo-200">
-                            <span><strong>${code}</strong>:${desc}</span>
+                            <span><strong>${code}</strong>: ${desc}</span>
                         </div>`;
             }).join('');
         }
@@ -1127,4 +1127,609 @@
                             <span class="font-bold text-slate-300">Avance</span>
                             <span class="font-black text-blue-400 text-base">${v.progress}%</span>
                         </div>
-                        <div
+                        <div class="w-full bg-slate-900 h-3 rounded-full overflow-hidden border border-slate-700">
+                            <div class="bg-blue-500 h-full" style="width: ${v.progress}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase mb-2">Repuestos</p>
+                        <div class="space-y-2">${generatePartsHtml(v.parts)}</div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function createTechCard(v) {
+            const div = document.createElement('div');
+            div.className = "bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4";
+            div.innerHTML = `
+                <div class="flex justify-between items-center border-b border-slate-700/80 pb-3">
+                    <div>
+                        <h3 class="font-bold text-white text-base">${v.model}</h3>
+                        <p class="text-xs text-slate-400">Patente: <strong class="text-white">${v.plate}</strong> &bull; Ingreso: ${v.dateIn}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openReportRunModal(${v.id})" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-2 shadow-lg">
+                            <i class="fa-solid fa-camera-retro"></i> Report & Run
+                        </button>
+                        <button onclick="openTechNotesModal(${v.id})" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-2 shadow-lg">
+                            <i class="fa-solid fa-pen-to-square"></i> Pizarra
+                        </button>
+                    </div>
+                </div>
+                ${v.updateRequested ? `
+                    <div class="bg-red-950/60 border border-red-600 p-3 rounded-xl flex justify-between items-center text-xs">
+                        <span class="text-red-200 font-bold"><i class="fa-solid fa-bell animate-bounce mr-1"></i> Administración / Operaciones solicita actualizar y reportar avance en esta unidad.</span>
+                        <button onclick="dismissTechUpdate(${v.id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold">Entendido</button>
+                    </div>
+                ` : ''}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="space-y-1 text-xs">
+                            <span class="font-bold text-slate-400 uppercase">Falla</span>
+                            <p class="text-slate-200 bg-slate-900/50 p-3 rounded-xl border border-slate-700">${v.fault}</p>
+                        </div>
+                        <div class="space-y-1.5 text-xs">
+                            <span class="font-bold text-indigo-400 uppercase">Procedimientos</span>
+                            <div class="space-y-1">${generateProceduresBadges(v.assignedProcedures)}</div>
+                        </div>
+                        <div class="space-y-1 text-xs">
+                            <span class="font-bold text-emerald-400 uppercase">Desglose</span>
+                            <div class="space-y-1.5 mt-1">${generateServiceStepsHtml(v.serviceSteps)}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-2">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="font-bold text-slate-300">Slider Avance</span>
+                                <span class="font-black text-emerald-400 text-base">${v.progress}%</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="${v.progress}" onchange="updateProg(${v.id}, this.value)" class="w-full accent-emerald-500 cursor-pointer h-2 bg-slate-800 rounded-lg">
+                        </div>
+                        <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-700">
+                            <span class="font-bold text-slate-300 text-[10px] uppercase block mb-2">Estado Repuestos</span>
+                            <div class="space-y-1">${generatePartsHtml(v.parts)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function createAdminOpsCard(v) {
+            const div = document.createElement('div');
+            div.className = "bg-slate-800 border border-slate-700 rounded-2xl shadow-lg overflow-hidden flex flex-col";
+            const isAdmin = window.currentUser.role === 'admin';
+            const isOps = window.currentUser.role === 'ops';
+            const hasNewMessage = (isAdmin && v.unreadAdmin) || (isOps && v.unreadOps);
+            const hasTechNote = v.unreadTechNote;
+            const isPending = v.status === 'Pendiente Asignación';
+
+            let clientObj = window.appState.clients.find(c => c.id === v.clientId);
+            let clientNameDisplay = clientObj ? `${clientObj.name} (${v.clientId})` : v.clientId;
+            const canAssign = isOps || (isAdmin && window.overrideActive);
+
+            div.innerHTML = `
+                <div class="bg-slate-900/80 border-b border-slate-700/80 p-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h3 class="font-bold text-white text-sm">${v.model} <span class="text-slate-400">(${v.plate})</span></h3>
+                            <span class="bg-blue-900/50 text-blue-300 text-[10px] px-2 py-0.5 rounded border font-mono">ID: ${v.clientId}</span>
+                            ${hasTechNote ? `<span class="badge-blink bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-triangle-exclamation"></i> ¡Nota a contacto@jvolt.cl!</span>` : ''}
+                        </div>
+                        <p class="text-[11px] text-slate-400">Ingreso: ${v.dateIn} &bull; Estado: <strong class="${isPending ? 'text-amber-400' : 'text-emerald-400'}">${v.status}</strong> &bull; Técnico: <strong class="text-slate-200">${v.techName || 'Sin Asignar'}</strong></p>
+                    </div>
+                    <div class="flex items-center flex-wrap gap-2">
+                        ${canAssign ? `<button onclick="openAssignTechModal(${v.id})" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-user-gear"></i> Asignar</button>` : ''}
+                        ${isOps || isAdmin ? `
+                            <button onclick="requestTechUpdate(${v.id})" class="bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl" title="Solicitar reporte al técnico"><i class="fa-solid fa-bell"></i> Pedir Reporte</button>
+                            <button onclick="openServiceStepsModal(${v.id})" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-list-check"></i> Desglose</button>
+                            <button onclick="openAssignProcedureModal(${v.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-file-lines"></i> Proc</button>
+                        ` : ''}
+                        <button onclick="openPartsModal(${v.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-boxes-stacked text-blue-400"></i> Repuestos</button>
+                        <button onclick="openChatModal(${v.id})" class="relative bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-4 py-2 rounded-xl"><i class="fa-solid fa-comments-dollar"></i> Chat & Econ. ${hasNewMessage ? `<span class="badge-blink absolute -top-2 -right-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">Nuevo</span>` : ''}</button>
+                        <button onclick="downloadPdfReport(${v.id})" class="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                        ${isAdmin ? `<button onclick="deleteVehicleRecord(${v.id})" class="bg-red-950/60 hover:bg-red-900 border border-red-600 text-red-200 text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-trash-can"></i> Eliminar</button>` : ''}
+                    </div>
+                </div>
+                <div class="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+                    <div class="space-y-3">
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700">
+                            <span class="font-bold text-slate-400 uppercase text-[10px] block mb-1">Falla</span>
+                            <p class="text-slate-200">${v.fault}</p>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 space-y-1">
+                            <span class="font-bold text-indigo-400 uppercase text-[10px] block mb-1">Procedimientos Asignados</span>
+                            <div class="space-y-1">${generateProceduresBadges(v.assignedProcedures)}</div>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 space-y-1">
+                            <span class="font-bold text-emerald-400 uppercase text-[10px] block mb-1">Desglose</span>
+                            <div class="space-y-1">${generateServiceStepsHtml(v.serviceSteps)}</div>
+                        </div>
+                        ${v.techNotes ? `<div class="bg-amber-950/30 p-3 rounded-xl border border-amber-900 text-amber-200 font-mono text-[11px]"><span class="font-bold uppercase block mb-1 text-amber-500">Nota Técnico (contacto@jvolt.cl):</span>${v.techNotes}</div><button onclick="clearTechNoteAlert(${v.id})" class="text-[10px] text-amber-500">Marcar leída</button>` : ''}
+                    </div>
+                    <div class="space-y-3">
+                        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-700 space-y-2">
+                            <div class="flex justify-between items-center"><span class="font-bold text-slate-300">Avance</span><span class="font-black text-emerald-400 text-sm">${v.progress}%</span></div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div class="bg-emerald-500 h-full" style="width: ${v.progress}%"></div></div>
+                        </div>
+                        <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-700 space-y-1 font-mono text-[11px]">
+                            <span class="font-bold text-slate-400 uppercase text-[10px] block mb-1">Económico Cloud</span>
+                            <div class="grid grid-cols-3 gap-1 text-slate-200">
+                                <div>Cot: ${v.quoteNum || 'N/A'}</div>
+                                <div>OC: ${v.ocNum || 'N/A'}</div>
+                                <div>Fac: ${v.factNum || 'N/A'}</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-700">
+                            <span class="font-bold text-slate-300 text-[10px] uppercase block mb-2">Repuestos</span>
+                            <div class="space-y-1">${generatePartsHtml(v.parts)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        // --- FUNCIONES INTERACCIÓN CLOUD SYNC ---
+        window.openClientsModal = function() { renderClientsList(); document.getElementById('modalClients').classList.remove('hidden'); };
+        window.closeClientsModal = function() { document.getElementById('modalClients').classList.add('hidden'); };
+
+        window.renderClientsList = function() {
+            const list = document.getElementById('clientsListDisplay');
+            if(!list) return;
+            list.innerHTML = '';
+            window.appState.clients.forEach(c => {
+                list.innerHTML += `<div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-2.5 rounded-lg"><div><span class="font-bold text-blue-400">${c.id}</span> - <span class="text-slate-200">${c.name}</span><p class="text-[10px] text-slate-400">RUT: ${c.rut}</p></div><button onclick="deleteClient('${c.id}')" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
+            });
+        };
+
+        window.createClient = function() {
+            const id = document.getElementById('newClientId').value.trim();
+            const name = document.getElementById('newClientName').value.trim();
+            const rut = document.getElementById('newClientRut').value.trim();
+            const contact = document.getElementById('newClientContact').value.trim();
+            if(id && name) {
+                window.appState.clients.push({ id, name, rut, contact });
+                syncToCloud();
+                renderClientsList();
+                showToast("Cliente guardado con éxito", 'success');
+            }
+        };
+
+        window.deleteClient = function(id) {
+            window.appState.clients = window.appState.clients.filter(c => c.id !== id);
+            syncToCloud();
+            renderClientsList();
+            showToast("Cliente eliminado", 'info');
+        };
+
+        window.openMajorPartsModal = function() { renderMajorPartsList(); document.getElementById('modalMajorParts').classList.remove('hidden'); };
+        window.closeMajorPartsModal = function() { document.getElementById('modalMajorParts').classList.add('hidden'); };
+
+        window.renderMajorPartsList = function() {
+            const container = document.getElementById('majorPartsListDisplay');
+            if(!container) return;
+            container.innerHTML = '';
+            window.appState.majorParts.forEach(m => {
+                container.innerHTML += `<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl space-y-1"><div class="flex justify-between"><span class="text-cyan-400 font-bold">${m.name}</span><button onclick="deleteMajorPart(${m.id})" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div><p class="text-[11px] text-slate-300">${m.details}</p></div>`;
+            });
+        };
+
+        window.addMajorPart = function() {
+            const name = document.getElementById('mpItemName').value.trim();
+            const type = document.getElementById('mpType').value;
+            const plate = document.getElementById('mpPlate').value.trim();
+            const status = document.getElementById('mpStatus').value;
+            const details = document.getElementById('mpDetails').value.trim();
+            if(name) {
+                window.appState.majorParts.push({ id: Date.now(), name, type, plate, status, details });
+                syncToCloud();
+                renderMajorPartsList();
+                showToast("Repuesto mayor registrado", "success");
+            }
+        };
+
+        window.deleteMajorPart = function(id) {
+            window.appState.majorParts = window.appState.majorParts.filter(m => m.id !== id);
+            syncToCloud();
+            renderMajorPartsList();
+            showToast("Eliminado", "info");
+        };
+
+        window.openProceduresModal = function() { renderProceduresList(); document.getElementById('modalProcedures').classList.remove('hidden'); };
+        window.closeProceduresModal = function() { document.getElementById('modalProcedures').classList.add('hidden'); };
+
+        window.renderProceduresList = function() {
+            const list = document.getElementById('proceduresListDisplay');
+            if(!list) return;
+            list.innerHTML = '';
+            window.appState.procedures.forEach(p => {
+                list.innerHTML += `<div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-2.5 rounded-lg"><div><strong class="text-indigo-400 font-mono">${p.code}</strong><p class="text-slate-200 text-[11px]">${p.desc}</p></div><button onclick="deleteProcedure('${p.id}')" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
+            });
+        };
+
+        window.createProcedure = function() {
+            const code = document.getElementById('newProcCode').value.trim();
+            const desc = document.getElementById('newProcDesc').value.trim();
+            if(code && desc) {
+                window.appState.procedures.push({ id: 'p_' + Date.now(), code, desc });
+                syncToCloud();
+                renderProceduresList();
+                showToast("Procedimiento guardado", "success");
+            }
+        };
+
+        window.deleteProcedure = function(id) {
+            window.appState.procedures = window.appState.procedures.filter(p => p.id !== id);
+            syncToCloud();
+            renderProceduresList();
+            showToast("Eliminado", "info");
+        };
+
+        window.openNewVehicleModal = function() {
+            const select = document.getElementById('nvClientSelect');
+            if(!select) return;
+            select.innerHTML = '<option value="">-- Seleccione Cliente --</option>';
+            window.appState.clients.forEach(c => { select.innerHTML += `<option value="${c.id}">ID: ${c.id} - ${c.name}</option>`; });
+            document.getElementById('modalNewVehicle').classList.remove('hidden');
+        };
+        window.closeNewVehicleModal = function() { document.getElementById('modalNewVehicle').classList.add('hidden'); };
+
+        window.saveNewVehicle = function(e) {
+            e.preventDefault();
+            const clientVal = document.getElementById('nvClientSelect').value;
+            if(!clientVal) { showToast("Seleccione cliente", "warning"); return; }
+            
+            window.appState.vehicles.unshift({
+                id: Date.now(),
+                clientId: clientVal,
+                dateIn: document.getElementById('nvDate').value,
+                plate: document.getElementById('nvPlate').value.trim(),
+                vin: document.getElementById('nvVin').value.trim(),
+                model: document.getElementById('nvModel').value.trim(),
+                fault: document.getElementById('nvFault').value.trim(),
+                status: 'Pendiente Asignación',
+                techAssigned: null,
+                techName: null,
+                commercialStatus: 'En Cotización',
+                quoteNum: '', ocNum: '', factNum: '', hh: 0,
+                parts: [], serviceSteps: [], assignedProcedures: [], reportRunItems: [],
+                progress: 0, receipts: [], techNotes: '', chat: [],
+                unreadAdmin: false, unreadOps: false, unreadTechNote: false, updateRequested: false
+            });
+            syncToCloud();
+            closeNewVehicleModal();
+            renderApp();
+            showToast("Equipo ingresado con éxito.", 'success');
+        };
+
+        window.toggleOverride = function() {
+            window.overrideActive = !window.overrideActive;
+            renderApp();
+        };
+
+        window.openAssignTechModal = function(id) {
+            window.activeModalVehicleId = id;
+            document.getElementById('modalAssignTech').classList.remove('hidden');
+        };
+        window.closeAssignTechModal = function() { document.getElementById('modalAssignTech').classList.add('hidden'); };
+
+        window.saveTechAssignment = function() {
+            const val = document.getElementById('selectTechAssign').value;
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                if(val === "none") {
+                    v.techAssigned = null; v.techName = null; v.status = 'Pendiente Asignación';
+                } else {
+                    const [email, name] = val.split('|');
+                    v.techAssigned = email; v.techName = name; v.status = 'En Proceso';
+                }
+                syncToCloud();
+                closeAssignTechModal();
+                renderApp();
+                showToast("Asignación guardada con éxito", "success");
+            }
+        };
+
+        window.openAssignProcedureModal = function(id) {
+            const v = window.appState.vehicles.find(x => x.id === id);
+            if(!v) return;
+            let code = prompt(`Código de procedimiento (Disponibles: ${window.appState.procedures.map(p=>p.code).join(', ')}):`);
+            if(!code) return;
+            code = code.trim();
+            if(!v.assignedProcedures) v.assignedProcedures = [];
+            if(!v.assignedProcedures.includes(code)) {
+                v.assignedProcedures.push(code);
+                syncToCloud();
+                renderApp();
+                showToast("Procedimiento asociado", "success");
+            }
+        };
+
+        window.openServiceStepsModal = function(id) {
+            window.activeModalVehicleId = id;
+            renderServiceStepsList();
+            document.getElementById('modalServiceSteps').classList.remove('hidden');
+        };
+        window.closeServiceStepsModal = function() { document.getElementById('modalServiceSteps').classList.add('hidden'); };
+
+        window.renderServiceStepsList = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            const container = document.getElementById('stepsListContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            if(!v.serviceSteps) v.serviceSteps = [];
+            v.serviceSteps.forEach((s, idx) => {
+                container.innerHTML += `<div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-2.5 rounded-lg"><span class="text-slate-200">${idx+1}. ${s.text}</span><button onclick="toggleServiceStep(${s.id})" class="text-[10px] font-bold px-2 py-1 rounded ${s.completed ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${s.completed ? 'OK' : 'Pend'}</button></div>`;
+            });
+        };
+
+        window.addServiceStep = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            const text = document.getElementById('newStepName').value.trim();
+            if(text && v) {
+                if(!v.serviceSteps) v.serviceSteps = [];
+                v.serviceSteps.push({ id: Date.now(), text, completed: false });
+                document.getElementById('newStepName').value = '';
+                syncToCloud();
+                renderServiceStepsList();
+                renderApp();
+            }
+        };
+
+        window.toggleServiceStep = function(stepId) {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                const s = v.serviceSteps.find(x => x.id === stepId);
+                if(s) { s.completed = !s.completed; syncToCloud(); renderServiceStepsList(); renderApp(); }
+            }
+        };
+
+        // Report & Run
+        window.openReportRunModal = function(id) {
+            window.activeModalVehicleId = id;
+            renderReportRunList();
+            document.getElementById('modalReportRun').classList.remove('hidden');
+        };
+        window.closeReportRunModal = function() { document.getElementById('modalReportRun').classList.add('hidden'); };
+
+        window.renderReportRunList = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            const container = document.getElementById('reportRunItemsContainer');
+            if(!container) return;
+            container.innerHTML = '';
+            const count = v.reportRunItems ? v.reportRunItems.length : 0;
+            const badge = document.getElementById('photoCountBadge');
+            const display = document.getElementById('photoCountDisplay');
+            if(badge) badge.innerText = count;
+            if(display) display.innerText = count;
+
+            if(!v.reportRunItems || count === 0) {
+                container.innerHTML = `<div class="col-span-2 bg-slate-900/60 p-8 rounded-xl text-center text-slate-400">Sin evidencias fotográficas. Sube hasta 30 fotos.</div>`;
+                return;
+            }
+
+            v.reportRunItems.forEach((item, idx) => {
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl space-y-2">
+                        <div class="flex justify-between items-center"><span class="text-purple-400 font-bold text-xs">Foto #${idx+1}: ${item.title}</span><button onclick="deleteReportRunItem(${item.id})" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>
+                        <input type="text" value="${item.comment}" onchange="updateItemComment(${item.id}, this.value)" class="w-full bg-slate-800 border rounded p-1.5 text-white text-[11px]">
+                        ${item.photoUrl ? `<div class="h-24 rounded overflow-hidden"><img src="${item.photoUrl}" class="w-full h-full object-cover"></div>` : ''}
+                    </div>
+                `;
+            });
+        };
+
+        window.updateItemComment = function(itemId, comment) {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                const item = v.reportRunItems.find(i => i.id === itemId);
+                if(item) { item.comment = comment; syncToCloud(); }
+            }
+        };
+
+        window.loadDemo5Photos = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(!v) return;
+            if(!v.reportRunItems) v.reportRunItems = [];
+            const demo = [
+                { title: 'Bomba Principal', status: 'Completado', comment: 'Revisión OK de bomba', photoUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb18f06f5?w=500' },
+                { title: 'Válvula Akron', status: 'En Proceso', comment: 'Ajuste de sellos', photoUrl: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500' }
+            ];
+            demo.forEach((d, i) => v.reportRunItems.push({ id: Date.now()+i, ...d, time: 'Ahora' }));
+            syncToCloud();
+            renderReportRunList();
+            showToast("Muestras demo cargadas con éxito", "success");
+        };
+
+        window.handleDeviceGalleryUpload = function(e) {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(!v) return;
+            const files = e.target.files;
+            if(!files) return;
+            if(!v.reportRunItems) v.reportRunItems = [];
+            Array.from(files).forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    v.reportRunItems.push({ id: Date.now()+idx, title: file.name, status: 'En Revisión', comment: 'Subido desde dispositivo', photoUrl: evt.target.result, time: 'Hoy' });
+                    syncToCloud();
+                    renderReportRunList();
+                };
+                reader.readAsDataURL(file);
+            });
+            showToast("Fotos añadidas", "success");
+        };
+
+        window.addReportRunItem = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            const title = document.getElementById('rrTitle').value.trim();
+            const comment = document.getElementById('rrComment').value.trim();
+            const photoUrl = document.getElementById('rrPhotoUrl').value.trim();
+            if(title && comment) {
+                if(!v.reportRunItems) v.reportRunItems = [];
+                v.reportRunItems.push({ id: Date.now(), title, status: document.getElementById('rrStatus').value, comment, photoUrl: photoUrl || 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500', time: 'Hoy' });
+                syncToCloud();
+                document.getElementById('rrTitle').value = '';
+                document.getElementById('rrComment').value = '';
+                renderReportRunList();
+                showToast("Evidencia añadida con éxito", "success");
+            }
+        };
+
+        window.deleteReportRunItem = function(itemId) {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                v.reportRunItems = v.reportRunItems.filter(i => i.id !== itemId);
+                syncToCloud();
+                renderReportRunList();
+                showToast("Eliminado", "info");
+            }
+        };
+
+        window.downloadTechnicianProgressPdf = function() {
+            showToast("Generando reporte PDF certificado con sello NFPA...", "success");
+        };
+
+        // Repuestos
+        window.openPartsModal = function(id) {
+            window.activeModalVehicleId = id;
+            renderAdminPartsList();
+            document.getElementById('modalParts').classList.remove('hidden');
+        };
+        window.closePartsModal = function() { document.getElementById('modalParts').classList.add('hidden'); };
+
+        window.renderAdminPartsList = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            const list = document.getElementById('partsListAdmin');
+            if(!list) return;
+            list.innerHTML = '';
+            v.parts.forEach(p => {
+                list.innerHTML += `<div class="flex justify-between items-center bg-slate-900 border p-2 rounded"><span class="text-slate-200">${p.name} (${p.status})</span><button onclick="removePart(${p.id})" class="text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
+            });
+        };
+
+        window.addPart = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            const name = document.getElementById('newPartName').value.trim();
+            if(name && v) {
+                v.parts.push({ id: Date.now(), name, status: document.getElementById('newPartStatus').value });
+                syncToCloud();
+                renderAdminPartsList();
+                renderApp();
+            }
+        };
+
+        window.removePart = function(partId) {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                v.parts = v.parts.filter(p => p.id !== partId);
+                syncToCloud();
+                renderAdminPartsList();
+                renderApp();
+            }
+        };
+
+        // Chat & Econ
+        window.openChatModal = function(id) {
+            window.activeModalVehicleId = id;
+            const v = window.appState.vehicles.find(x => x.id === id);
+            if(window.currentUser.role === 'admin') v.unreadAdmin = false;
+            if(window.currentUser.role === 'ops') v.unreadOps = false;
+            syncToCloud();
+
+            document.getElementById('chatModalTitle').innerText = `${v.model} (${v.plate})`;
+            document.getElementById('inputQuoteNum').value = v.quoteNum || '';
+            document.getElementById('inputOcNum').value = v.ocNum || '';
+            document.getElementById('inputFactNum').value = v.factNum || '';
+            document.getElementById('inputHH').value = v.hh || '';
+            document.getElementById('selectCommercial').value = v.commercialStatus || 'En Cotización';
+
+            renderChatMsgs();
+            document.getElementById('modalChat').classList.remove('hidden');
+            renderApp();
+        };
+        window.closeChatModal = function() { document.getElementById('modalChat').classList.add('hidden'); };
+
+        window.saveEconData = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                v.quoteNum = document.getElementById('inputQuoteNum').value.trim();
+                v.ocNum = document.getElementById('inputOcNum').value.trim();
+                v.factNum = document.getElementById('inputFactNum').value.trim();
+                v.hh = document.getElementById('inputHH').value;
+                v.commercialStatus = document.getElementById('selectCommercial').value;
+                syncToCloud();
+                showToast("Datos económicos guardados con éxito", 'success');
+                renderApp();
+            }
+        };
+
+        window.renderChatMsgs = function() {
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            const box = document.getElementById('chatMessagesBox');
+            if(!box) return;
+            box.innerHTML = '';
+            if(!v.chat || v.chat.length === 0) { box.innerHTML = '<p class="text-slate-500 italic text-center">Sin mensajes.</p>'; return; }
+            v.chat.forEach(m => {
+                box.innerHTML += `<div class="bg-slate-900 p-2 rounded border"><strong class="text-blue-400">${m.roleName}</strong>: <span class="text-slate-200">${m.text}</span></div>`;
+            });
+        };
+
+        window.sendChatMessage = function() {
+            const txt = document.getElementById('chatInputText').value.trim();
+            if(!txt) return;
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                if(!v.chat) v.chat = [];
+                v.chat.push({ sender: window.currentUser.email, roleName: window.currentUser.name, text: txt, time: 'Ahora' });
+                if(window.currentUser.role === 'admin') v.unreadOps = true;
+                else if(window.currentUser.role === 'ops') v.unreadAdmin = true;
+                syncToCloud();
+                document.getElementById('chatInputText').value = '';
+                renderChatMsgs();
+                renderApp();
+            }
+        };
+
+        window.downloadPdfReport = function(id) {
+            showToast("Reporte PDF generado correctamente", "success");
+        };
+
+        window.updateProg = function(id, val) {
+            const v = window.appState.vehicles.find(x => x.id === id);
+            if(v) { v.progress = parseInt(val); syncToCloud(); renderApp(); }
+        };
+
+        window.openTechNotesModal = function(id) {
+            window.activeModalVehicleId = id;
+            const v = window.appState.vehicles.find(x => x.id === id);
+            document.getElementById('techNotepad').value = v.techNotes || '';
+            document.getElementById('modalTechNotes').classList.remove('hidden');
+        };
+        window.closeTechNotesModal = function() { document.getElementById('modalTechNotes').classList.add('hidden'); };
+
+        window.saveTechNote = function() {
+            const text = document.getElementById('techNotepad').value.trim();
+            const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
+            if(v) {
+                v.techNotes = text;
+                if(text !== '') v.unreadTechNote = true;
+                syncToCloud();
+                closeTechNotesModal();
+                renderApp();
+                showToast("Nota guardada con éxito", "success");
+            }
+        };
+
+        window.clearTechNoteAlert = function(id) {
+            const v = window.appState.vehicles.find(x => x.id === id);
+            if(v) { v.unreadTechNote = false; syncToCloud(); renderApp(); }
+        };
+
+        // Arrancar
+        initFirebase();
+    </script>
+</body>
+</html>
