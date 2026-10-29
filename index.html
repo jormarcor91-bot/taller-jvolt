@@ -37,7 +37,7 @@
             from { opacity: 1; visibility: visible; }
             to { opacity: 0; visibility: hidden; }
         }
-        .fade-out-splash { animation: fade-out 0.8s ease-in-out forwards; }
+        .fade-out-splash { animation: fade-out 0.6s ease-in-out forwards; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -84,9 +84,9 @@
 
             <!-- BARRA DE CARGA ANIMADA -->
             <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800 p-0.5">
-                <div id="splashBar" class="bg-gradient-to-r from-blue-600 to-red-600 h-full rounded-full transition-all duration-[1500ms] w-0"></div>
+                <div id="splashBar" class="bg-gradient-to-r from-blue-600 to-red-600 h-full rounded-full transition-all duration-[1000ms] w-0"></div>
             </div>
-            <p id="syncStatusText" class="text-[10px] text-emerald-400 font-mono">Conectando a base de datos Cloud Global...</p>
+            <p id="syncStatusText" class="text-[10px] text-emerald-400 font-mono">Iniciando sistema...</p>
         </div>
     </div>
 
@@ -653,7 +653,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCCB9-IGgFbHOL5-RVTO4ZsGc4Cu7XK5n0",
@@ -733,30 +733,30 @@
         window.activeModalVehicleId = null;
         window.overrideActive = false;
 
-        // INICIALIZACIÓN FIREBASE Y TIEMPO REAL GLOBAL (Con timeout de seguridad)
+        // INICIALIZACIÓN BLINDADA (Nunca bloquea la interfaz)
+        function finishSplash() {
+            const bar = document.getElementById('splashBar');
+            if(bar) bar.style.width = '100%';
+            setTimeout(() => {
+                const splash = document.getElementById('splashScreen');
+                if(splash) {
+                    splash.classList.add('fade-out-splash');
+                    setTimeout(() => {
+                        splash.style.display = 'none';
+                        const login = document.getElementById('loginScreen');
+                        if(login) login.classList.remove('hidden');
+                    }, 500);
+                }
+            }, 200);
+        }
+
         async function initFirebase() {
-            let splashCompleted = false;
-
-            const finishSplash = () => {
-                if (splashCompleted) return;
-                splashCompleted = true;
-                const bar = document.getElementById('splashBar');
-                if(bar) bar.style.width = '100%';
-                setTimeout(() => {
-                    const splash = document.getElementById('splashScreen');
-                    if(splash) {
-                        splash.classList.add('fade-out-splash');
-                        setTimeout(() => {
-                            splash.style.display = 'none';
-                            const login = document.getElementById('loginScreen');
-                            if(login) login.classList.remove('hidden');
-                        }, 800);
-                    }
-                }, 300);
-            };
-
-            // Seguridad de respaldo: abre la app en máximo 2 segundos pase lo que pase con la red
-            const safetyTimeout = setTimeout(finishSplash, 2000);
+            // Forzar apertura en máximo 1.5 segundos pase lo que pase con la red
+            const safetyTimeout = setTimeout(() => {
+                const status = document.getElementById('syncStatusText');
+                if(status) status.innerText = "Modo Local / Sincronización diferida";
+                finishSplash();
+            }, 1500);
 
             try {
                 app = initializeApp(firebaseConfig);
@@ -766,9 +766,10 @@
                 await signInAnonymously(auth);
                 cloudUser = auth.currentUser;
                 isCloudConnected = true;
-                const syncText = document.getElementById('syncStatusText');
-                if(syncText) syncText.innerText = "¡Sincronización Cloud Global establecida!";
                 
+                const status = document.getElementById('syncStatusText');
+                if(status) status.innerText = "¡Conectado a Cloud Global!";
+
                 const docRef = doc(db, 'jvolt_taller_data', 'master_state');
                 
                 onSnapshot(docRef, (docSnap) => {
@@ -787,23 +788,20 @@
                     }
                     finishSplash();
                 }, (error) => {
-                    console.debug("Firestore snapshot note:", error);
+                    console.debug("Firestore notice:", error);
                     clearTimeout(safetyTimeout);
                     finishSplash();
                 });
 
             } catch (e) {
-                console.debug("Firebase init fallback mode:", e);
+                console.debug("Offline / Local mode active:", e);
                 clearTimeout(safetyTimeout);
-                const syncText = document.getElementById('syncStatusText');
-                if(syncText) syncText.innerText = "Modo Local Seguro Activo";
                 finishSplash();
             }
         }
 
         window.syncToCloud = async function() {
             localStorage.setItem('jvolt_master_state', JSON.stringify(window.appState));
-
             if (!isCloudConnected || !db) return;
             try {
                 const docRef = doc(db, 'jvolt_taller_data', 'master_state');
@@ -1212,7 +1210,6 @@
             const isPending = v.status === 'Pendiente Asignación';
 
             let clientObj = window.appState.clients.find(c => c.id === v.clientId);
-            let clientNameDisplay = clientObj ? `${clientObj.name} (${v.clientId})` : v.clientId;
             const canAssign = isOps || (isAdmin && window.overrideActive);
 
             div.innerHTML = `
