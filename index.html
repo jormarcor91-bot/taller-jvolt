@@ -45,7 +45,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-red-600 selection:text-white relative">
 
-    <!-- BOTÓN FLOTANTE DE SINCRONIZACIÓN GLOBAL -->
+    <!-- BOTÓN FLOTANTE DE SINCRONIZACIÓN MANUAL -->
     <button onclick="globalForceSync()" class="fixed bottom-6 left-6 z-[150] bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-blue-400 transition transform hover:scale-105" title="Sincronizar Cloud Ahora">
         <i class="fa-solid fa-rotate text-xl animate-spin"></i>
     </button>
@@ -59,6 +59,7 @@
     <!-- 1. PANTALLA DE PRESENTACIÓN & SYNC FIREBASE -->
     <div id="splashScreen" class="fixed inset-0 bg-slate-950 z-[200] flex flex-col items-center justify-center p-4 space-y-6 transition-opacity duration-700">
         <div class="bg-slate-900/90 border border-slate-800 p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-md w-full space-y-6 text-center">
+            <!-- LOGO OFICIAL JVOLT -->
             <div class="bg-white p-3 rounded-2xl shadow-xl flex items-center justify-center border border-slate-700 w-full">
                 <div class="flex items-center gap-3 py-1">
                     <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-700 via-blue-500 to-cyan-300 shadow-lg flex items-center justify-center border-2 border-blue-400 shrink-0">
@@ -81,6 +82,7 @@
                 <p class="text-xs text-slate-400">Sincronización Cloud Global (taller.jvolt.cl)</p>
             </div>
 
+            <!-- BARRA DE CARGA ANIMADA -->
             <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800 p-0.5">
                 <div id="splashBar" class="bg-gradient-to-r from-blue-600 to-red-600 h-full rounded-full transition-all duration-[1500ms] w-0"></div>
             </div>
@@ -104,6 +106,7 @@
                 <p class="text-xs text-slate-400">Soporte Técnico Cloud: <strong>contacto@jvolt.cl</strong></p>
             </div>
 
+            <!-- ACCESOS RÁPIDOS -->
             <div class="bg-slate-800/60 border border-slate-700/60 p-3 rounded-xl space-y-2 text-xs">
                 <p class="font-bold text-slate-300 text-[10px] uppercase tracking-wider">Accesos Rápidos Cloud:</p>
                 <div class="grid grid-cols-2 gap-1.5 font-mono text-[10px]">
@@ -141,6 +144,8 @@
 
     <!-- 3. APLICACIÓN PRINCIPAL -->
     <div id="appContainer" class="hidden flex-1 flex flex-col min-h-screen">
+        
+        <!-- HEADER INSTITUCIONAL -->
         <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-40 px-4 py-3 shadow-md">
             <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
                 <div class="flex items-center gap-3">
@@ -168,7 +173,10 @@
             </div>
         </header>
 
+        <!-- MAIN CONTENIDO -->
         <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+            <!-- DASHBOARD DE MÉTRICAS -->
             <div id="metricsDashboard" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-slate-800/80 border border-slate-700/70 p-4 rounded-2xl flex items-center justify-between shadow-lg">
                     <div>
@@ -200,6 +208,7 @@
                 </div>
             </div>
 
+            <!-- ENCABEZADO DE SECCIÓN Y CONTROLES -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-700/80 pb-3">
                 <div class="flex items-center gap-3">
                     <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
@@ -217,12 +226,14 @@
                         </button>
                     </div>
 
+                    <!-- Botones exclusivos Admin -->
                     <div id="adminOnlyButtons" class="hidden flex gap-2">
                         <button onclick="openUsersModal()" class="bg-red-700 hover:bg-red-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-2 shadow-lg" title="Gestión Completa de Usuarios y Credenciales Cloud">
                             <i class="fa-solid fa-user-shield"></i> Gestión de Usuarios & Claves
                         </button>
                     </div>
 
+                    <!-- Botones Admin y Ops -->
                     <div id="adminOpsExtraButtons" class="hidden flex gap-2">
                         <button onclick="openMajorPartsModal()" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-2 shadow-lg">
                             <i class="fa-solid fa-globe"></i> Repuestos Mayores / Ext.
@@ -240,40 +251,142 @@
                 </div>
             </div>
 
-            <div id="vehiclesList" class="grid grid-cols-1 gap-6"></div>
+            <!-- LISTADO DINÁMICO DE VEHÍCULOS -->
+            <div id="vehiclesList" class="grid grid-cols-1 gap-6">
+                <!-- Renderizado por JS -->
+            </div>
         </main>
     </div>
 
-    <!-- MODALES -->
+    <!-- ================= MODALS ================= -->
+
+    <!-- MODAL GESTIÓN COMPLETA DE USUARIOS Y CLAVES (ADMIN) -->
     <div id="modalUsers" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col h-[85vh]">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="font-bold text-white text-sm flex items-center gap-2"><i class="fa-solid fa-user-shield text-red-500"></i> Administración Cloud de Usuarios, Credenciales y Contactos</h3>
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-red-500"></i> Administración Cloud de Usuarios, Credenciales y Contactos
+                </h3>
                 <button onclick="closeUsersModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
+            
             <div class="py-3 space-y-4 flex flex-col flex-1 overflow-y-auto text-xs">
                 <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-700 space-y-3">
                     <label class="block text-slate-300 font-bold mb-1">Crear / Editar Usuario Cloud:</label>
                     <input type="hidden" id="editUserIndex" value="-1">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input type="email" id="uEmail" placeholder="Correo / Usuario" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white">
-                        <input type="text" id="uPass" placeholder="Contraseña" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white">
-                        <input type="text" id="uName" placeholder="Nombre completo" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white">
-                        <select id="uRole" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white font-bold">
-                            <option value="admin">Administrador General</option>
+                        <input type="email" id="uEmail" placeholder="Correo / Usuario (ej: contacto@jvolt.cl)" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="uPass" placeholder="Contraseña de acceso" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="uName" placeholder="Nombre completo (ej: Juan Pérez)" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <select id="uRole" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none font-bold">
+                            <option value="admin">Administrador General (contacto@jvolt.cl)</option>
                             <option value="ops">Jefe de Operaciones</option>
-                            <option value="tech">Técnico</option>
-                            <option value="client">Cliente</option>
+                            <option value="tech">Técnico de Taller / Terreno</option>
+                            <option value="client">Cliente / Institución</option>
                         </select>
                     </div>
                     <div class="flex gap-2 pt-2">
-                        <button onclick="saveUserRecord()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg">Guardar en la Nube</button>
+                        <button onclick="saveUserRecord()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg shadow">Guardar en la Nube</button>
                         <button onclick="resetUserForm()" class="px-4 py-2.5 bg-slate-700 text-slate-300 font-bold rounded-lg">Limpiar</button>
                     </div>
                 </div>
+
                 <div>
-                    <h4 class="font-bold text-slate-300 mb-2">Usuarios Sincronizados:</h4>
+                    <h4 class="font-bold text-slate-300 mb-2">Usuarios Sincronizados en el Servidor:</h4>
                     <div id="usersListDisplay" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GESTIÓN DE CLIENTES -->
+    <div id="modalClients" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-users text-blue-400"></i> Gestión de Clientes Cloud
+                </h3>
+                <button onclick="closeClientsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <label class="block text-slate-300 font-bold mb-1">Registrar Nuevo Cliente:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="text" id="newClientId" placeholder="ID (Ej: ID00018)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="newClientName" placeholder="Nombre Institución" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="newClientRut" placeholder="RUT (Ej: 70.123.456-K)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="newClientContact" placeholder="Contacto (Tel / Email)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                    </div>
+                    <button onclick="createClient()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg mt-2">Guardar Cliente Cloud</button>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-400 mb-2">Clientes Sincronizados:</h4>
+                    <div id="clientsListDisplay" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GESTIÓN DE REPUESTOS MAYORES Y SERVICIOS EXTERNOS -->
+    <div id="modalMajorParts" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col h-[85vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-cyan-400"></i> Repuestos Mayores y Servicios Externos (Cloud Sync)
+                </h3>
+                <button onclick="closeMajorPartsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="py-3 space-y-4 flex flex-col flex-1 overflow-y-auto text-xs">
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <label class="block text-slate-300 font-bold mb-1">Registrar Adquisición / Servicio Mayor:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="text" id="mpItemName" placeholder="Ítem (ej: Válvula Akron Brass G2)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <select id="mpType" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none font-bold">
+                            <option value="Internacional">Solicitud Internacional</option>
+                            <option value="Nacional">Compra Nacional</option>
+                            <option value="Servicio Externo">Servicio Externo (Tornería, Soldadura, etc.)</option>
+                        </select>
+                        <input type="text" id="mpPlate" placeholder="Patente Vehículo Asociado (ej: CL-4920)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <select id="mpStatus" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none font-bold">
+                            <option value="solicitado" class="text-amber-400">Solicitado</option>
+                            <option value="transito" class="text-blue-400">En consolidación / Tránsito</option>
+                            <option value="arribado" class="text-emerald-400">Arribado / Recepcionado</option>
+                        </select>
+                    </div>
+                    <textarea id="mpDetails" rows="2" placeholder="Detalles, proveedor, tiempo estimado..." class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none mt-2"></textarea>
+                    <button onclick="addMajorPart()" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-2 rounded-lg mt-2">Sincronizar Repuesto Mayor</button>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-slate-300 mb-2">Listado Sincronizado:</h4>
+                    <div id="majorPartsListDisplay" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PROCEDIMIENTOS ESTÁNDAR -->
+    <div id="modalProcedures" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines text-indigo-400"></i> Catálogo de Procedimientos Cloud
+                </h3>
+                <button onclick="closeProceduresModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="space-y-4 text-xs">
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <label class="block text-slate-300 font-bold mb-1">Crear Nuevo Código:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input type="text" id="newProcCode" placeholder="Código (Ej: jvoltps1110)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none font-mono">
+                        <input type="text" id="newProcDesc" placeholder="Descripción" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                    </div>
+                    <button onclick="createProcedure()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg mt-2">Guardar Procedimiento</button>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-400 mb-2">Catálogo Sincronizado:</h4>
+                    <div id="proceduresListDisplay" class="space-y-2 max-h-44 overflow-y-auto pr-1"></div>
                 </div>
             </div>
         </div>
@@ -283,5 +396,735 @@
     <div id="modalNewVehicle" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
-                <h3 class="font-bold text-white text-sm">Ingreso Cloud de Equipo al Taller</h3>
-                <button onclick="closeNewVehicleModal()" class="text-slate-40
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus-square text-red-500"></i> Ingreso Cloud de Equipo al Taller
+                </h3>
+                <button onclick="closeNewVehicleModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="saveNewVehicle(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div class="sm:col-span-2">
+                    <label class="block text-slate-300 font-bold mb-1">Seleccionar ID de Cliente *</label>
+                    <select id="nvClientSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-bold mb-1">Fecha de Ingreso *</label>
+                    <input type="date" id="nvDate" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Patente / Ficha *</label>
+                    <input type="text" id="nvPlate" placeholder="Ej: CL-4920" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-red-500">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Chasis / VIN</label>
+                    <input type="text" id="nvVin" placeholder="Ej: 1H9V..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-red-500">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Modelo / Tipo *</label>
+                    <input type="text" id="nvModel" placeholder="Ej: Camión Magirus BT" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-red-500">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-slate-300 font-medium mb-1">Motivo de Ingreso / Falla Reportada *</label>
+                    <textarea id="nvFault" rows="2" placeholder="Describa el problema inicial..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-red-500"></textarea>
+                </div>
+                <div class="sm:col-span-2 flex justify-end gap-3 pt-2 border-t border-slate-700">
+                    <button type="button" onclick="closeNewVehicleModal()" class="px-4 py-2 bg-slate-700 text-slate-200 rounded-xl font-bold">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold">Sincronizar e Ingresar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL ASIGNAR / REVERTIR TÉCNICO -->
+    <div id="modalAssignTech" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <h3 class="font-bold text-white text-sm border-b border-slate-700 pb-2"><i class="fa-solid fa-user-gear text-blue-400"></i> Asignación de Técnico</h3>
+            <div class="space-y-3 text-xs">
+                <p id="assignModalDesc" class="text-slate-400">Seleccione el técnico o revierta la asignación.</p>
+                <select id="selectTechAssign" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500">
+                    <option value="none">-- Sin Asignar (Revertir a Pendiente) --</option>
+                    <option value="jorge@jvolt.cl|Jorge Marín">Jorge Marín (Técnico 1)</option>
+                    <option value="hector@jvolt.cl|Héctor Campins">Héctor Campins (Técnico 2)</option>
+                </select>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button onclick="closeAssignTechModal()" class="px-4 py-2 bg-slate-700 text-white rounded-xl font-bold">Cancelar</button>
+                    <button onclick="saveTechAssignment()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DESGLOSE DE SERVICIOS -->
+    <div id="modalServiceSteps" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-400"></i> Desglose Detallado del Servicio Cloud
+                </h3>
+                <button onclick="closeServiceStepsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-4 text-xs">
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <label class="block text-slate-300 font-bold mb-1">Añadir Paso al Servicio:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newStepName" placeholder="Ej: desmontaje de ruedas" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <button onclick="addServiceStep()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg">Añadir Paso</button>
+                    </div>
+                    <div id="stepsListContainer" class="space-y-2 mt-3 max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PIZARRA DEL TÉCNICO -->
+    <div id="modalTechNotes" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col h-[70vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3 mb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-chalkboard-user text-amber-400"></i> Pizarra de Observaciones Técnicas (Cloud)
+                </h3>
+                <button onclick="closeTechNotesModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p class="text-[11px] text-slate-400 mb-2">Las notas guardadas sincronizan instantáneamente con contacto@jvolt.cl.</p>
+            
+            <textarea id="techNotepad" class="flex-1 w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-white text-sm focus:outline-none focus:border-amber-500 resize-none font-mono" placeholder="Escriba las observaciones..."></textarea>
+            
+            <div class="flex justify-end mt-4">
+                <button onclick="saveTechNote()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Sincronizar Nota
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL REPORT & RUN -->
+    <div id="modalReportRun" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-4xl w-full p-6 shadow-2xl flex flex-col h-[90vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-camera-retro text-purple-400"></i> Report & Run — Cloud Galería (NFPA Member)
+                    </h3>
+                    <p class="text-[11px] text-slate-400">Hasta 30 fotos independientes con comentarios individuales sincronizados en la nube.</p>
+                </div>
+                <button onclick="closeReportRunModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="py-3 space-y-4 flex flex-col flex-1 overflow-y-auto text-xs">
+                <!-- CONTROLES DE CARGA GALERÍA Y DEMO 5 FOTOS -->
+                <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div>
+                        <span class="font-bold text-slate-200 block text-sm">Galería Cloud (<span id="photoCountBadge">0</span> / 30 fotos)</span>
+                        <span class="text-[10px] text-slate-400">Adjunta fotos y comentarios independientes.</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="loadDemo5Photos()" class="bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/50 font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5" title="Cargar 5 fotos demo institucionales">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Cargar 5 Muestras Demo JVOLT
+                        </button>
+                        <label class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2.5 rounded-xl cursor-pointer flex items-center gap-2 shadow-lg transition">
+                            <i class="fa-solid fa-folder-open"></i> Seleccionar Fotos Galería
+                            <input type="file" id="deviceGalleryInput" accept="image/*" multiple onchange="handleDeviceGalleryUpload(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- FORMULARIO NUEVO REGISTRO FOTOGRÁFICO INDEPENDIENTE CON COMENTARIO -->
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 space-y-3">
+                    <label class="block text-slate-300 font-bold mb-1"><i class="fa-solid fa-plus-circle text-purple-400 mr-1"></i> Añadir Registro Fotográfico con Comentario:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input type="text" id="rrTitle" placeholder="Título / Componente" class="bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white focus:outline-none">
+                        <select id="rrStatus" class="bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white focus:outline-none font-bold">
+                            <option value="En Revisión" class="text-amber-400">En Revisión / Diagnóstico</option>
+                            <option value="En Proceso" class="text-blue-400">En Reparación / Sustitución</option>
+                            <option value="Completado" class="text-emerald-400">Completado y Probado OK</option>
+                        </select>
+                        <input type="url" id="rrPhotoUrl" placeholder="URL o Archivo" class="bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white focus:outline-none font-mono text-[11px]">
+                    </div>
+                    <textarea id="rrComment" rows="2" placeholder="Comentario u observación técnica para ESTA foto..." class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white focus:outline-none mt-1"></textarea>
+                    
+                    <div class="flex justify-end pt-1">
+                        <button onclick="addReportRunItem()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2 rounded-lg shadow">Añadir a Cloud</button>
+                    </div>
+                </div>
+
+                <!-- LISTADO DE FOTOS -->
+                <div class="flex-1 space-y-3">
+                    <div class="flex justify-between items-center bg-slate-900/40 p-2 rounded-lg border border-slate-800">
+                        <h4 class="font-bold text-slate-300 text-xs">Evidencias Sincronizadas (<span id="photoCountDisplay">0</span>)</h4>
+                        <button onclick="downloadTechnicianProgressPdf()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg transition">
+                            <i class="fa-solid fa-file-pdf"></i> Descargar PDF Oficial NFPA
+                        </button>
+                    </div>
+                    <div id="reportRunItemsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-1">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GESTIÓN DE REPUESTOS -->
+    <div id="modalParts" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked text-blue-400"></i> Gestión de Repuestos Cloud
+                </h3>
+                <button onclick="closePartsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <div class="space-y-4 text-xs">
+                <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <label class="block text-slate-300 font-bold mb-1">Añadir/Actualizar Repuesto:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newPartName" placeholder="Ej: Bomba Centrífuga" class="flex-1 bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <select id="newPartStatus" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none font-bold">
+                            <option value="espera" class="text-amber-400">En Espera</option>
+                            <option value="arribado" class="text-emerald-400">Arribados</option>
+                            <option value="demora" class="text-red-400">Demora</option>
+                        </select>
+                        <button onclick="addPart()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg">Añadir</button>
+                    </div>
+                    <div id="partsListAdmin" class="space-y-2 mt-3 max-h-40 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GESTIÓN ECONÓMICA, DETALLES Y CHAT -->
+    <div id="modalChat" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col h-[88vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <div>
+                    <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-comments-dollar text-emerald-400"></i> Gestión Económica y Chat Cloud
+                    </h3>
+                    <p id="chatModalTitle" class="text-xs text-slate-400">Unidad: -</p>
+                </div>
+                <button onclick="closeChatModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="py-3 space-y-3 flex flex-col flex-1 overflow-y-auto text-xs">
+                <!-- PANEL ECONÓMICO -->
+                <div class="bg-slate-900/90 border border-slate-700/80 p-3.5 rounded-xl grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">N° de Cotización</label>
+                        <input type="text" id="inputQuoteNum" placeholder="Ej: COT-2026-99" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">N° Orden de Compra (OC)</label>
+                        <input type="text" id="inputOcNum" placeholder="Ej: OC-88120" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">N° de Factura</label>
+                        <input type="text" id="inputFactNum" placeholder="Ej: FAC-44102" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">Horas Hombre (H.H)</label>
+                        <input type="number" id="inputHH" placeholder="Ej: 24" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1 font-bold">Estado Comercial</label>
+                        <select id="selectCommercial" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white focus:outline-none">
+                            <option value="En Cotización">En Cotización</option>
+                            <option value="Aprobado - OC">Aprobado - OC</option>
+                            <option value="Facturado">Facturado</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-3 flex justify-end mt-1">
+                        <button onclick="saveEconData()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg shadow">Sincronizar Datos Económicos</button>
+                    </div>
+                </div>
+
+                <div id="chatMessagesBox" class="bg-slate-950 border border-slate-800 rounded-xl p-3 h-40 overflow-y-auto flex flex-col gap-2.5">
+                </div>
+
+                <div class="flex gap-2 shrink-0">
+                    <input type="text" id="chatInputText" placeholder="Escriba un mensaje..." class="flex-1 bg-slate-900 border border-slate-700 text-white rounded-xl px-3 py-2 focus:outline-none">
+                    <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2 rounded-xl flex items-center gap-2">
+                        Enviar <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FIREBASE & APP LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCB9-IGgFbHOL5-RVTO4ZsGc4Cu7XK5n0",
+            authDomain: "jvolt-taller.firebaseapp.com",
+            projectId: "jvolt-taller",
+            storageBucket: "jvolt-taller.firebasestorage.app",
+            messagingSenderId: "826178922148",
+            appId: "1:826178922148:web:af882aa8dea1e135c3a831",
+            measurementId: "G-1HGSFN267D"
+        };
+
+        let app, db, auth, cloudUser = null;
+        let isCloudConnected = false;
+
+        const defaultState = {
+            users: [
+                { email: 'contacto@jvolt.cl', pass: 'admin123', name: 'Administrador Principal JVOLT', role: 'admin' },
+                { email: 'operaciones@jvolt.cl', pass: 'ops123', name: 'Jefe de Operaciones Taller', role: 'ops' },
+                { email: 'jorge@jvolt.cl', pass: 'tec123', name: 'Jorge Marín (Técnico 1)', role: 'tech' },
+                { email: 'hector@jvolt.cl', pass: 'tec123', name: 'Héctor Campins (Técnico 2)', role: 'tech' },
+                { email: 'ID00017', pass: 'cliente123', name: 'Compañía de Bomberos Antofagasta', role: 'client' }
+            ],
+            vehicles: [
+                {
+                    id: 1,
+                    clientId: 'ID00017', 
+                    dateIn: '2026-10-20',
+                    plate: 'CL-4920',
+                    vin: '1H9V4421',
+                    model: 'Camión Magirus BT',
+                    fault: 'Falla en componente motor, baja presión.',
+                    status: 'En Proceso', 
+                    techAssigned: 'jorge@jvolt.cl',
+                    techName: 'Jorge Marín (Técnico 1)',
+                    commercialStatus: 'Aprobado - OC',
+                    quoteNum: 'COT-2026-102',
+                    ocNum: 'OC-99823',
+                    factNum: '',
+                    hh: 36,
+                    parts: [
+                        { id: 101, name: 'Bomba centrífuga 1250', status: 'arribado' },
+                        { id: 102, name: 'Sellos mecánicos', status: 'espera' }
+                    ],
+                    serviceSteps: [
+                        { id: 1001, text: 'desmontaje de ruedas', completed: true },
+                        { id: 1002, text: 'cambio de frenos', completed: true }
+                    ],
+                    assignedProcedures: ['jvoltps1110'],
+                    reportRunItems: [], 
+                    progress: 45,
+                    receipts: [{ id: 99, name: 'Vale_Repuestos_Local.pdf' }],
+                    techNotes: 'Se revisó la bomba centrífuga.',
+                    chat: [{ sender: 'operaciones@jvolt.cl', roleName: 'Operaciones', text: 'Técnico asignado.', time: '09:00' }],
+                    unreadAdmin: false,
+                    unreadOps: false,
+                    unreadTechNote: true,
+                    updateRequested: false
+                }
+            ],
+            clients: [
+                { id: 'ID00017', name: 'Compañía de Bomberos Antofagasta', rut: '70.123.456-K', contact: 'contacto@bomberos.cl' },
+                { id: 'ID00022', name: 'Minera Escondida Ltda.', rut: '76.987.321-2', contact: 'talleres@minera.cl' }
+            ],
+            majorParts: [
+                { id: 1, name: 'Válvula Akron Brass G2', type: 'Internacional', plate: 'CL-4920', status: 'transito', details: 'Solicitado en origen USA' }
+            ],
+            procedures: [
+                { id: 'p1', code: 'jvoltps1110', desc: 'Mantención Mayor Sistema de Bombeo BT' },
+                { id: 'p2', code: 'jvoltps1125', desc: 'Revisión y Certificación de Frenos ABS' }
+            ]
+        };
+
+        let savedLocalState = localStorage.getItem('jvolt_master_state');
+        window.appState = savedLocalState ? JSON.parse(savedLocalState) : defaultState;
+
+        window.currentUser = null;
+        window.activeModalVehicleId = null;
+        window.overrideActive = false;
+
+        // INICIALIZACIÓN FIREBASE Y TIEMPO REAL GLOBAL (Alineado a colección unificada jvolt_taller / conexion)
+        async function initFirebase() {
+            let splashCompleted = false;
+
+            const finishSplash = () => {
+                if (splashCompleted) return;
+                splashCompleted = true;
+                const bar = document.getElementById('splashBar');
+                if(bar) bar.style.width = '100%';
+                setTimeout(() => {
+                    const splash = document.getElementById('splashScreen');
+                    if(splash) {
+                        splash.classList.add('fade-out-splash');
+                        setTimeout(() => {
+                            splash.style.display = 'none';
+                            const login = document.getElementById('loginScreen');
+                            if(login) login.classList.remove('hidden');
+                        }, 800);
+                    }
+                }, 300);
+            };
+
+            setTimeout(finishSplash, 2000);
+
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                await signInAnonymously(auth);
+                cloudUser = auth.currentUser;
+                isCloudConnected = true;
+                const syncText = document.getElementById('syncStatusText');
+                if(syncText) syncText.innerText = "¡Sincronización Cloud Global establecida!";
+                
+                const docRef = doc(db, 'jvolt_taller', 'conexion');
+                const snap = await getDoc(docRef);
+                
+                if (snap.exists() && snap.data().state) {
+                    window.appState = snap.data().state;
+                    localStorage.setItem('jvolt_master_state', JSON.stringify(window.appState));
+                } else {
+                    await setDoc(docRef, { state: window.appState, updatedAt: new Date().toISOString() });
+                }
+                
+                onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists() && docSnap.data().state) {
+                        window.appState = docSnap.data().state;
+                        localStorage.setItem('jvolt_master_state', JSON.stringify(window.appState));
+                        if (window.currentUser) {
+                            renderApp();
+                        }
+                    }
+                    finishSplash();
+                }, (error) => {
+                    console.debug("Firestore snapshot note:", error);
+                    finishSplash();
+                });
+
+            } catch (e) {
+                console.debug("Firebase init fallback mode:", e);
+                const syncText = document.getElementById('syncStatusText');
+                if(syncText) syncText.innerText = "Modo Local Seguro Activo";
+                finishSplash();
+            }
+        }
+
+        window.syncToCloud = async function() {
+            localStorage.setItem('jvolt_master_state', JSON.stringify(window.appState));
+
+            if (!isCloudConnected || !db) return;
+            try {
+                const docRef = doc(db, 'jvolt_taller', 'conexion');
+                await setDoc(docRef, { state: window.appState, updatedAt: new Date().toISOString() });
+                showToast("Sincronizado en la nube", "success");
+            } catch(err) {
+                console.debug("Sync error:", err);
+            }
+        };
+
+        window.globalForceSync = async function() {
+            if (!db) { showToast("Modo local activo", "warning"); return; }
+            try {
+                const docRef = doc(db, 'jvolt_taller', 'conexion');
+                const snap = await getDoc(docRef);
+                if (snap.exists() && snap.data().state) {
+                    window.appState = snap.data().state;
+                    localStorage.setItem('jvolt_master_state', JSON.stringify(window.appState));
+                    if (window.currentUser) renderApp();
+                    showToast("¡Sincronizado con éxito desde la nube!", "success");
+                }
+            } catch(e) {
+                showToast("Error al forzar sincronización", "warning");
+            }
+        };
+
+        window.showToast = function(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if(!toast) return;
+            const msg = document.getElementById('toastMsg');
+            if(msg) msg.innerText = message;
+            
+            if(type === 'success') {
+                toast.className = 'fixed bottom-5 right-5 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border transition-all duration-300 transform bg-emerald-900/90 border-emerald-600 text-emerald-100 animate-slide-up';
+            } else if (type === 'warning') {
+                toast.className = 'fixed bottom-5 right-5 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border transition-all duration-300 transform bg-amber-900/90 border-amber-600 text-amber-100 animate-slide-up';
+            } else {
+                toast.className = 'fixed bottom-5 right-5 z-[100] flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border transition-all duration-300 transform bg-blue-900/90 border-blue-600 text-blue-100 animate-slide-up';
+            }
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.classList.replace('translate-y-0', 'translate-y-10');
+                toast.classList.replace('opacity-100', 'opacity-0');
+                setTimeout(() => { toast.style.display = 'none'; }, 300);
+            }, 3000);
+        };
+
+        // --- SISTEMA DE LOGIN ---
+        window.fillCreds = function(email, pass) {
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = pass;
+        };
+
+        window.handleLogin = function(e) {
+            e.preventDefault();
+            const identifier = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value.trim();
+
+            const foundUser = window.appState.users.find(u => u.email.toLowerCase() === identifier.toLowerCase() && u.pass === pass);
+
+            if (foundUser) {
+                window.currentUser = { id: foundUser.email, role: foundUser.role, name: foundUser.name };
+            } else {
+                document.getElementById('loginError').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appContainer').classList.remove('hidden');
+            renderApp();
+            showToast(`Bienvenido, ${window.currentUser.name}`, 'info');
+        };
+
+        window.handleLogout = function() {
+            window.currentUser = null;
+            document.getElementById('appContainer').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+        };
+
+        // --- GESTIÓN DE USUARIOS Y CLAVES (ADMIN) ---
+        window.openUsersModal = function() {
+            renderUsersList();
+            resetUserForm();
+            document.getElementById('modalUsers').classList.remove('hidden');
+        };
+        window.closeUsersModal = function() { document.getElementById('modalUsers').classList.add('hidden'); };
+
+        window.renderUsersList = function() {
+            const container = document.getElementById('usersListDisplay');
+            if(!container) return;
+            container.innerHTML = '';
+            window.appState.users.forEach((u, idx) => {
+                let badgeColor = u.role === 'admin' ? 'bg-red-900/50 text-red-300 border-red-600' :
+                                 u.role === 'ops' ? 'bg-blue-900/50 text-blue-300 border-blue-600' :
+                                 u.role === 'tech' ? 'bg-emerald-900/50 text-emerald-300 border-emerald-600' : 'bg-amber-900/50 text-amber-300 border-amber-600';
+                
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <strong class="text-white">${u.name}</strong>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${badgeColor}">${u.role.toUpperCase()}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 font-mono mt-0.5">Usuario: ${u.email} | Clave: <span class="text-amber-300">${u.pass}</span></p>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="editUserRecord(${idx})" class="text-blue-400 hover:text-blue-300 p-1.5 bg-blue-950/40 rounded border border-blue-800" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                            ${u.email !== 'contacto@jvolt.cl' ? `<button onclick="deleteUserRecord(${idx})" class="text-red-400 hover:text-red-300 p-1.5 bg-red-950/40 rounded border border-red-800" title="Eliminar"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        window.saveUserRecord = function() {
+            const email = document.getElementById('uEmail').value.trim();
+            const pass = document.getElementById('uPass').value.trim();
+            const name = document.getElementById('uName').value.trim();
+            const role = document.getElementById('uRole').value;
+            const editIdx = parseInt(document.getElementById('editUserIndex').value);
+
+            if(!email || !pass || !name) { showToast("Complete todos los campos", "warning"); return; }
+
+            if(editIdx === -1) {
+                if(window.appState.users.find(u => u.email.toLowerCase() === email.toLowerCase())) {
+                    showToast("El usuario ya existe", "warning"); return;
+                }
+                window.appState.users.push({ email, pass, name, role });
+                showToast("Usuario creado en la nube", "success");
+            } else {
+                window.appState.users[editIdx] = { email, pass, name, role };
+                showToast("Usuario actualizado en la nube", "success");
+            }
+            syncToCloud();
+            renderUsersList();
+            resetUserForm();
+        };
+
+        window.editUserRecord = function(idx) {
+            const u = window.appState.users[idx];
+            document.getElementById('uEmail').value = u.email;
+            document.getElementById('uPass').value = u.pass;
+            document.getElementById('uName').value = u.name;
+            document.getElementById('uRole').value = u.role;
+            document.getElementById('editUserIndex').value = idx;
+        };
+
+        window.deleteUserRecord = function(idx) {
+            if(window.appState.users[idx].email === 'contacto@jvolt.cl') {
+                showToast("No se puede eliminar contacto@jvolt.cl", "warning"); return;
+            }
+            window.appState.users.splice(idx, 1);
+            syncToCloud();
+            renderUsersList();
+            showToast("Usuario eliminado", "info");
+        };
+
+        window.resetUserForm = function() {
+            document.getElementById('uEmail').value = '';
+            document.getElementById('uPass').value = '';
+            document.getElementById('uName').value = '';
+            document.getElementById('uRole').value = 'tech';
+            document.getElementById('editUserIndex').value = '-1';
+        };
+
+        window.deleteVehicleRecord = function(id) {
+            if(window.currentUser.role !== 'admin') {
+                showToast("Solo el Administrador puede eliminar unidades.", "warning"); return;
+            }
+            const v = window.appState.vehicles.find(x => x.id === id);
+            if(!v) return;
+
+            if(confirm(`¿Está seguro de eliminar la unidad ${v.model} (${v.plate})?`)) {
+                window.appState.vehicles = window.appState.vehicles.filter(x => x.id !== id);
+                syncToCloud();
+                renderApp();
+                showToast("Unidad eliminada con éxito.", "info");
+            }
+        };
+
+        // --- SOLICITUD DE ACTUALIZACIÓN ---
+        window.requestTechUpdate = function(id) {
+            const v = window.appState.vehicles.find(x => x.id === id);
+            if(v) {
+                v.updateRequested = true;
+                syncToCloud();
+                renderApp();
+                showToast("Solicitud de reporte enviada al técnico", "success");
+            }
+        };
+
+        window.dismissTechUpdate = function(id) {
+            const v = window.appState.vehicles.find(x => x.id === id);
+            if(v) {
+                v.updateRequested = false;
+                syncToCloud();
+                renderApp();
+                showToast("Aviso atendido", "info");
+            }
+        };
+
+        // --- RENDERIZADO GENERAL ---
+        window.renderApp = function() {
+            document.getElementById('sessionRoleTitle').innerText = `${window.currentUser.name} (${window.currentUser.email})`;
+            const dashboard = document.getElementById('metricsDashboard');
+            const adminOnlyButtons = document.getElementById('adminOnlyButtons');
+            const adminOpsExtraButtons = document.getElementById('adminOpsExtraButtons');
+            const opsOverrideContainer = document.getElementById('opsOverrideContainer');
+            const overrideBadge = document.getElementById('overrideBadge');
+
+            if(window.currentUser.role === 'admin') {
+                if(adminOnlyButtons) adminOnlyButtons.classList.remove('hidden');
+                if(adminOpsExtraButtons) adminOpsExtraButtons.classList.remove('hidden');
+                if(opsOverrideContainer) opsOverrideContainer.classList.add('hidden');
+            } else if(window.currentUser.role === 'ops') {
+                if(adminOnlyButtons) adminOnlyButtons.classList.add('hidden');
+                if(adminOpsExtraButtons) adminOpsExtraButtons.classList.remove('hidden');
+                if(opsOverrideContainer) opsOverrideContainer.classList.remove('hidden');
+            } else {
+                if(adminOnlyButtons) adminOnlyButtons.classList.add('hidden');
+                if(adminOpsExtraButtons) adminOpsExtraButtons.classList.add('hidden');
+                if(opsOverrideContainer) opsOverrideContainer.classList.add('hidden');
+            }
+
+            if(window.overrideActive) { if(overrideBadge) overrideBadge.classList.remove('hidden'); }
+            else { if(overrideBadge) overrideBadge.classList.add('hidden'); }
+
+            let displayVehicles = window.appState.vehicles;
+
+            if (window.currentUser.role === 'tech') {
+                displayVehicles = window.appState.vehicles.filter(v => v.techAssigned === window.currentUser.email);
+                if(dashboard) dashboard.classList.remove('hidden');
+            } else if (window.currentUser.role === 'client') {
+                displayVehicles = window.appState.vehicles.filter(v => v.clientId === window.currentUser.id || v.clientId === window.currentUser.email);
+                if(dashboard) dashboard.classList.add('hidden'); 
+            } else {
+                if(dashboard) dashboard.classList.remove('hidden');
+            }
+
+            if (window.currentUser.role !== 'client') {
+                document.getElementById('metricTotal').innerText = displayVehicles.length;
+                document.getElementById('metricPend').innerText = displayVehicles.filter(v => v.status === 'Pendiente Asignación').length;
+                document.getElementById('metricProc').innerText = displayVehicles.filter(v => v.status === 'En Proceso').length;
+                
+                let unreadAlerts = displayVehicles.filter(v => 
+                    (window.currentUser.role === 'admin' && (v.unreadAdmin || v.unreadTechNote)) || 
+                    (window.currentUser.role === 'ops' && (v.unreadOps || v.unreadTechNote))
+                ).length;
+                document.getElementById('metricAlerts').innerText = unreadAlerts;
+            }
+
+            const listContainer = document.getElementById('vehiclesList');
+            listContainer.innerHTML = '';
+
+            if (displayVehicles.length === 0) {
+                listContainer.innerHTML = `<div class="bg-slate-800/40 p-12 rounded-2xl text-center text-slate-400 text-sm border border-slate-700">No hay unidades asignadas o disponibles en este momento.</div>`;
+                return;
+            }
+
+            displayVehicles.forEach(v => {
+                if (window.currentUser.role === 'client') {
+                    listContainer.appendChild(createClientCard(v));
+                } else if (window.currentUser.role === 'tech') {
+                    listContainer.appendChild(createTechCard(v));
+                } else {
+                    listContainer.appendChild(createAdminOpsCard(v));
+                }
+            });
+        };
+
+        function generatePartsHtml(partsArray) {
+            if(!partsArray || partsArray.length === 0) return `<p class="text-[10px] text-slate-500 italic">Sin repuestos.</p>`;
+            return partsArray.map(p => {
+                let colorClass = p.status === 'arribado' ? 'text-emerald-400 bg-emerald-500/10' : 
+                                 p.status === 'espera' ? 'text-amber-400 bg-amber-500/10' : 'text-red-400 bg-red-500/10';
+                let statusText = p.status === 'arribado' ? 'Arribados' : p.status === 'espera' ? 'En Espera' : 'Demora';
+                return `<div class="flex justify-between items-center text-[10px] p-2 rounded-lg border border-slate-700/50 bg-slate-900/50">
+                            <span class="text-slate-200">${p.name}</span>
+                            <span class="font-bold border px-2 py-0.5 rounded border-slate-600 ${colorClass}">${statusText}</span>
+                        </div>`;
+            }).join('');
+        }
+
+        function generateServiceStepsHtml(stepsArray) {
+            if(!stepsArray || stepsArray.length === 0) return `<p class="text-[10px] text-slate-500 italic">Sin pasos registrados.</p>`;
+            return stepsArray.map((s, idx) => `
+                <div class="flex items-center justify-between text-[11px] p-2 rounded-lg bg-slate-900/70 border border-slate-700/60">
+                    <span class="text-slate-200"><strong class="text-emerald-400 mr-1">${idx+1}.</strong>${s.text}</span>
+                    <span class="text-[10px] font-bold ${s.completed ? 'text-emerald-400' : 'text-amber-400'}">${s.completed ? 'Completado' : 'Pendiente'}</span>
+                </div>
+            `).join('');
+        }
+
+        function generateProceduresBadges(assignedCodes) {
+            if(!assignedCodes || assignedCodes.length === 0) return `<p class="text-[10px] text-slate-500 italic">Sin procedimientos asociados.</p>`;
+            return assignedCodes.map(code => {
+                let proc = window.appState.procedures.find(p => p.code === code);
+                let desc = proc ? proc.desc : 'Procedimiento Estándar';
+                return `<div class="flex items-center justify-between text-[11px] p-2 rounded-lg bg-indigo-950/40 border border-indigo-700/50 text-indigo-200">
+                            <span><strong>${code}</strong>:${desc}</span>
+                        </div>`;
+            }).join('');
+        }
+
+        function createClientCard(v) {
+            const div = document.createElement('div');
+            div.className = "bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-lg space-y-4";
+            div.innerHTML = `
+                <div class="flex justify-between items-center border-b border-slate-700/80 pb-3">
+                    <div>
+                        <h3 class="font-bold text-white text-lg">${v.model}</h3>
+                        <p class="text-xs text-slate-400">Patente: <strong class="text-white">${v.plate}</strong></p>
+                    </div>
+                    <span class="bg-blue-900/40 border text-blue-300 text-xs px-3 py-1.5 rounded-lg font-bold">Estado: ${v.status}</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs mb-1">
+                            <span class="font-bold text-slate-300">Avance</span>
+                            <span class="font-black text-blue-400 text-base">${v.progress}%</span>
+                        </div>
+                        <div
