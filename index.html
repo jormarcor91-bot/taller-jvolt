@@ -7,7 +7,6 @@
     <!-- Tailwind CSS con respaldo visual por si falla la red -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Respaldo visual por si el CDN de Tailwind no carga en el celular */
         body { background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; margin: 0; padding: 0; }
         .hidden { display: none !important; }
     </style>
@@ -233,8 +232,11 @@
                         </button>
                     </div>
 
-                    <!-- Botones Admin y Ops -->
+                    <!-- Botones Admin y Ops (Incluye la nueva Bodega e Información Interna) -->
                     <div id="adminOpsExtraButtons" class="hidden flex gap-2">
+                        <button onclick="openInternalWarehouseModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-2 shadow-lg animate-pulse" title="Bodega de Operaciones e Información Interna">
+                            <i class="fa-solid fa-warehouse"></i> Bodega & Info Interna
+                        </button>
                         <button onclick="openMajorPartsModal()" class="bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-2 shadow-lg">
                             <i class="fa-solid fa-globe"></i> Repuestos Mayores / Ext.
                         </button>
@@ -260,24 +262,81 @@
 
     <!-- ================= MODALS ================= -->
 
+    <!-- NUEVO MODAL: BODEGA DE OPERACIONES E INFORMACIÓN INTERNA -->
+    <div id="modalInternalWarehouse" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-4xl w-full p-6 shadow-2xl flex flex-col h-[90vh]">
+            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-warehouse text-amber-400"></i> Bodega de Operaciones e Información Interna (Modelos y Repuestos)
+                </h3>
+                <button onclick="closeInternalWarehouseModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="py-3 space-y-6 flex flex-col flex-1 overflow-y-auto text-xs">
+                <!-- SECCIÓN 1: MODELOS DE VEHÍCULOS Y REPUESTOS COMPATIBLES -->
+                <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-truck-monster text-blue-400"></i> 1. Catálogo de Modelos y Repuestos
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                        <input type="text" id="catModelName" placeholder="Modelo Vehículo (ej: Magirus BT)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="catPartName" placeholder="Nombre Repuesto (ej: Bomba 1250)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="catPartNum" placeholder="N° de Parte (SKU)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none font-mono">
+                        <input type="text" id="catProvider" placeholder="Proveedor habitual" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                        <input type="number" id="catStock" placeholder="Stock en Bodega (Cantidad)" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <button onclick="saveInternalCatalogItem()" class="sm:col-span-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-lg shadow">Guardar en Catálogo / Bodega Interna</button>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: INVENTARIO ACTUAL Y ALERTAS DE STOCK (<= 1) -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-300 text-xs">Inventario Actual en Bodega y Alertas de Adquisición:</h4>
+                    <div id="internalWarehouseDisplay" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- SECCIÓN 3: ENVIAR INDICACIÓN DE INSTALACIÓN A TÉCNICO -->
+                <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <h4 class="font-bold text-slate-200 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-emerald-400"></i> 2. Enviar Indicación de Instalación a Técnico
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <select id="assignVehicleSelect" class="bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white font-bold focus:outline-none">
+                            <option value="">-- Seleccionar Unidad / Vehículo --</option>
+                        </select>
+                        <select id="assignPartSelect" class="bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white font-bold focus:outline-none">
+                            <option value="">-- Seleccionar Repuesto de Bodega --</option>
+                        </select>
+                        <select id="assignTechSelect" class="bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white font-bold focus:outline-none">
+                            <option value="">-- Seleccionar Técnico --</option>
+                        </select>
+                    </div>
+                    <textarea id="assignInstruction" rows="2" placeholder="Indicaciones específicas para el técnico (ej: Instalar este repuesto con urgencia en el sistema de bombeo...)" class="w-full bg-slate-800 border border-slate-600 rounded-lg p-2.5 text-white focus:outline-none mt-1"></textarea>
+                    <button onclick="sendPartInstructionToTech()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg shadow">Enviar Orden de Instalación al Técnico</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL GESTIÓN COMPLETA DE USUARIOS Y CLAVES (ADMIN) -->
     <div id="modalUsers" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl flex flex-col h-[85vh]">
             <div class="flex justify-between items-center border-b border-slate-700 pb-3">
                 <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-red-500"></i> Administración Cloud de Usuarios, Credenciales y Contactos
+                    <i class="fa-solid fa-user-shield text-red-500"></i> Administración Cloud de Usuarios, Clientes y Técnicos
                 </h3>
                 <button onclick="closeUsersModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             
             <div class="py-3 space-y-4 flex flex-col flex-1 overflow-y-auto text-xs">
                 <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-700 space-y-3">
-                    <label class="block text-slate-300 font-bold mb-1">Crear / Editar Usuario Cloud:</label>
+                    <label class="block text-slate-300 font-bold mb-1">Crear / Editar Usuario (Clientes o Internos/Técnicos):</label>
                     <input type="hidden" id="editUserIndex" value="-1">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input type="email" id="uEmail" placeholder="Correo / Usuario (ej: contacto@jvolt.cl)" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="email" id="uEmail" placeholder="Correo / Usuario (ej: jorge@jvolt.cl o ID00018)" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
                         <input type="text" id="uPass" placeholder="Contraseña de acceso" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
-                        <input type="text" id="uName" placeholder="Nombre completo (ej: Juan Pérez)" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
+                        <input type="text" id="uName" placeholder="Nombre completo / Institución" required class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none">
                         <select id="uRole" class="bg-slate-800 border border-slate-600 rounded-lg p-2 text-white focus:outline-none font-bold">
                             <option value="admin">Administrador General (contacto@jvolt.cl)</option>
                             <option value="ops">Jefe de Operaciones</option>
@@ -519,7 +578,6 @@
                         <span class="text-[10px] text-slate-400">Usa la cámara del teléfono o sube archivos.</span>
                     </div>
                     <div class="flex items-center flex-wrap gap-2">
-                        <!-- Botón Cámara Real Móvil (capture="environment") -->
                         <label class="bg-red-600 hover:bg-red-700 text-white font-bold px-4 py-2.5 rounded-xl cursor-pointer flex items-center gap-2 shadow-lg transition">
                             <i class="fa-solid fa-camera"></i> Tomar Foto con Cámara
                             <input type="file" id="deviceCameraInput" accept="image/*" capture="environment" onchange="handleDeviceCameraCapture(event)" class="hidden">
@@ -559,7 +617,6 @@
                 <div class="flex-1 space-y-3">
                     <div class="flex justify-between items-center bg-slate-900/40 p-2 rounded-lg border border-slate-800">
                         <h4 class="font-bold text-slate-300 text-xs">Evidencias Sincronizadas (<span id="photoCountDisplay">0</span>)</h4>
-                        <!-- BOTÓN DE DESCARGA PDF COMPLETO REAL -->
                         <button onclick="downloadCompleteProcessPdf()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg transition">
                             <i class="fa-solid fa-file-pdf"></i> Descargar PDF Completo del Proceso
                         </button>
@@ -731,6 +788,10 @@
             procedures: [
                 { id: 'p1', code: 'jvoltps1110', desc: 'Mantención Mayor Sistema de Bombeo BT' },
                 { id: 'p2', code: 'jvoltps1125', desc: 'Revisión y Certificación de Frenos ABS' }
+            ],
+            internalCatalog: [
+                { id: 1, model: 'Magirus BT', partName: 'Bomba Centrífuga Hale 1250 GPM', partNum: 'HAL-1250-SKU', provider: 'Hale Direct USA', stock: 2 },
+                { id: 2, model: 'Pierce Saber', partName: 'Filtro Separador Combustible FS19596', partNum: 'FS19596', provider: 'Fleetguard Chile', stock: 1 }
             ]
         };
 
@@ -976,6 +1037,150 @@
             }
         };
 
+        // --- NUEVA ARISTA: BODEGA DE OPERACIONES E INFORMACIÓN INTERNA ---
+        window.openInternalWarehouseModal = function() {
+            renderInternalCatalogList();
+            populateWarehouseSelects();
+            document.getElementById('modalInternalWarehouse').classList.remove('hidden');
+        };
+        window.closeInternalWarehouseModal = function() { document.getElementById('modalInternalWarehouse'].classList.add('hidden'); };
+
+        window.saveInternalCatalogItem = function() {
+            const model = document.getElementById('catModelName').value.trim();
+            const partName = document.getElementById('catPartName').value.trim();
+            const partNum = document.getElementById('catPartNum').value.trim();
+            const provider = document.getElementById('catProvider').value.trim();
+            const stock = parseInt(document.getElementById('catStock').value) || 0;
+
+            if(!model || !partName || !partNum) {
+                showToast("Complete los campos obligatorios del repuesto", "warning");
+                return;
+            }
+
+            if(!window.appState.internalCatalog) window.appState.internalCatalog = [];
+            window.appState.internalCatalog.push({ id: Date.now(), model, partName, partNum, provider, stock });
+            syncToCloud();
+            renderInternalCatalogList();
+            populateWarehouseSelects();
+
+            document.getElementById('catModelName').value = '';
+            document.getElementById('catPartName').value = '';
+            document.getElementById('catPartNum').value = '';
+            document.getElementById('catProvider').value = '';
+            document.getElementById('catStock').value = '';
+
+            showToast("Repuesto guardado en bodega interna", "success");
+        };
+
+        window.renderInternalCatalogList = function() {
+            const container = document.getElementById('internalWarehouseDisplay');
+            container.innerHTML = '';
+            if(!window.appState.internalCatalog || window.appState.internalCatalog.length === 0) {
+                container.innerHTML = `<p class="text-slate-500 italic text-center">Sin repuestos registrados en el catálogo interno.</p>`;
+                return;
+            }
+
+            window.appState.internalCatalog.forEach(item => {
+                let isLowStock = item.stock <= 1;
+                container.innerHTML += `
+                    <div class="bg-slate-900 border ${isLowStock ? 'border-amber-500 bg-amber-950/20' : 'border-slate-700'} p-3 rounded-xl flex justify-between items-center">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <strong class="text-white">${item.partName}</strong>
+                                <span class="text-[10px] font-mono text-cyan-400 bg-cyan-950 px-2 py-0.5 rounded border border-cyan-800">SKU: ${item.partNum}</span>
+                                <span class="text-[10px] text-slate-300">Modelo: <strong>${item.model}</strong></span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Proveedor: ${item.provider || 'N/A'} | Stock: <strong class="${isLowStock ? 'text-amber-400 animate-pulse' : 'text-emerald-400'}">${item.stock} un.</strong></p>
+                            ${isLowStock ? `<p class="text-[10px] font-bold text-amber-300 mt-1"><i class="fa-solid fa-triangle-exclamation"></i> ¡Stock en límite! Solicitando adquisición automática a administración.</p>` : ''}
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="adjustStock(${item.id}, 1)" class="bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded text-xs" title="Aumentar Stock">+</button>
+                            <button onclick="adjustStock(${item.id}, -1)" class="bg-slate-800 hover:bg-slate-700 text-white px-2 py-1 rounded text-xs" title="Disminuir Stock">-</button>
+                            <button onclick="deleteCatalogItem(${item.id})" class="text-red-400 hover:text-red-300 p-1.5"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        };
+
+        window.adjustStock = function(id, delta) {
+            const item = window.appState.internalCatalog.find(x => x.id === id);
+            if(item) {
+                item.stock = Math.max(0, item.stock + delta);
+                syncToCloud();
+                renderInternalCatalogList();
+            }
+        };
+
+        window.deleteCatalogItem = function(id) {
+            window.appState.internalCatalog = window.appState.internalCatalog.filter(x => x.id !== id);
+            syncToCloud();
+            renderInternalCatalogList();
+            populateWarehouseSelects();
+            showToast("Item eliminado del catálogo", "info");
+        };
+
+        window.populateWarehouseSelects = function() {
+            const vSelect = document.getElementById('assignVehicleSelect');
+            const pSelect = document.getElementById('assignPartSelect');
+            const tSelect = document.getElementById('assignTechSelect');
+
+            vSelect.innerHTML = '<option value="">-- Seleccionar Unidad / Vehículo --</option>';
+            window.appState.vehicles.forEach(v => {
+                vSelect.innerHTML += `<option value="${v.id}">${v.model} (${v.plate})</option>`;
+            });
+
+            pSelect.innerHTML = '<option value="">-- Seleccionar Repuesto de Bodega --</option>';
+            if(window.appState.internalCatalog) {
+                window.appState.internalCatalog.forEach(p => {
+                    pSelect.innerHTML += `<option value="${p.partName} (SKU: ${p.partNum})">${p.partName} [Stock: ${p.stock}]</option>`;
+                });
+            }
+
+            tSelect.innerHTML = '<option value="">-- Seleccionar Técnico --</option>';
+            window.appState.users.filter(u => u.role === 'tech').forEach(t => {
+                tSelect.innerHTML += `<option value="${t.email}">${t.name} (${t.email})</option>`;
+            });
+        };
+
+        window.sendPartInstructionToTech = function() {
+            const vId = document.getElementById('assignVehicleSelect').value;
+            const partName = document.getElementById('assignPartSelect').value;
+            const techEmail = document.getElementById('assignTechSelect').value;
+            const instruction = document.getElementById('assignInstruction').value.trim();
+
+            if(!vId || !partName || !techEmail || !instruction) {
+                showToast("Complete todos los campos para enviar la indicación", "warning");
+                return;
+            }
+
+            const vehicle = window.appState.vehicles.find(x => x.id == vId);
+            if(!vehicle) return;
+
+            // Asignar el técnico si no lo tenía y guardar la indicación en las notas técnicas o chat
+            vehicle.techAssigned = techEmail;
+            let techObj = window.appState.users.find(u => u.email === techEmail);
+            if(techObj) vehicle.techName = techObj.name;
+            vehicle.status = 'En Proceso';
+
+            if(!vehicle.parts) vehicle.parts = [];
+            vehicle.parts.push({ id: Date.now(), name: partName, status: 'espera' });
+
+            if(!vehicle.chat) vehicle.chat = [];
+            vehicle.chat.push({
+                sender: window.currentUser.email,
+                roleName: 'Operaciones / Bodega',
+                text: `[INDICACIÓN DE REPUESTO]: ${instruction}. Repuesto asignado: ${partName}`,
+                time: 'Ahora'
+            });
+
+            vehicle.unreadTechNote = true;
+            syncToCloud();
+            renderApp();
+            closeInternalWarehouseModal();
+            showToast("Indicación y repuesto enviados al técnico con éxito", "success");
+        };
+
         // --- SOLICITUD DE ACTUALIZACIÓN (ADMIN/OPS A TÉCNICO) ---
         window.requestTechUpdate = function(id) {
             const v = window.appState.vehicles.find(x => x.id === id);
@@ -1026,6 +1231,7 @@
             let displayVehicles = window.appState.vehicles;
 
             if (window.currentUser.role === 'tech') {
+                // FILTRO AUTOMÁTICO: El técnico asignado ve inmediatamente las unidades que le corresponden
                 displayVehicles = window.appState.vehicles.filter(v => v.techAssigned === window.currentUser.email);
                 dashboard.classList.remove('hidden');
             } else if (window.currentUser.role === 'client') {
@@ -1178,7 +1384,7 @@
                             <input type="range" min="0" max="100" value="${v.progress}" onchange="updateProg(${v.id}, this.value)" class="w-full accent-emerald-500 cursor-pointer h-2 bg-slate-800 rounded-lg">
                         </div>
                         <div class="bg-slate-900/40 p-3 rounded-xl border border-slate-700">
-                            <span class="font-bold text-slate-300 text-[10px] uppercase block mb-2">Estado Repuestos</span>
+                            <span class="font-bold text-slate-300 text-[10px] uppercase block mb-2">Estado Repuestos / Indicaciones</span>
                             <div class="space-y-1">${generatePartsHtml(v.parts)}</div>
                         </div>
                     </div>
@@ -1196,7 +1402,6 @@
             const hasTechNote = v.unreadTechNote;
             const isPending = v.status === 'Pendiente Asignación';
 
-            let clientObj = window.appState.clients.find(c => c.id === v.clientId);
             const canAssign = isOps || (isAdmin && window.overrideActive);
 
             div.innerHTML = `
@@ -1218,7 +1423,6 @@
                         ` : ''}
                         <button onclick="openPartsModal(${v.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-boxes-stacked text-blue-400"></i> Repuestos</button>
                         <button onclick="openChatModal(${v.id})" class="relative bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-4 py-2 rounded-xl"><i class="fa-solid fa-comments-dollar"></i> Chat & Econ. ${hasNewMessage ? `<span class="badge-blink absolute -top-2 -right-2 bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full">Nuevo</span>` : ''}</button>
-                        <!-- BOTÓN DESCARGAR PDF COMPLETO -->
                         <button onclick="downloadCompleteProcessPdfId(${v.id})" class="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-bold px-3 py-2 rounded-xl"><i class="fa-solid fa-file-pdf"></i> PDF Completo</button>
                         ${isAdmin ? `<button onclick="deleteVehicleRecord(${v.id})" class="bg-red-950/60 hover:bg-red-900 border border-red-600 text-red-200 text-[11px] font-bold px-3 py-2 rounded-xl" title="Eliminar registro de la plataforma"><i class="fa-solid fa-trash-can"></i> Eliminar Unidad</button>` : ''}
                     </div>
@@ -1520,7 +1724,6 @@
             }
         };
 
-        // Capturar foto directamente con la cámara del celular (capture="environment")
         window.handleDeviceCameraCapture = function(e) {
             const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
             if(!v) return;
@@ -1699,7 +1902,7 @@
                         ${v.serviceSteps && v.serviceSteps.length > 0 ? v.serviceSteps.map((s, i) => `<tr><td>${i+1}</td><td>${s.text}</td><td>${s.completed ? 'Completado OK' : 'Pendiente'}</td></tr>`).join('') : '<tr><td colspan="3">Sin pasos registrados.</td></tr>'}
                     </table>
 
-                    <h3>Repuestos y Componentes</h3>
+                    <h3>Repuestos y Componentes / Indicaciones de Bodega</h3>
                     <table>
                         <tr><th>Repuesto / Componente</th><th>Estado de Abastecimiento</th></tr>
                         ${v.parts && v.parts.length > 0 ? v.parts.map(p => `<tr><td>${p.name}</td><td>${p.status.toUpperCase()}</td></tr>`).join('') : '<tr><td colspan="2">Sin repuestos asociados.</td></tr>'}
