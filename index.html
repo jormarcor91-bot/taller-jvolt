@@ -1,18 +1,10 @@
-// INICIALIZACIÓN CON PURGA AUTOMÁTICA DE CACHÉ PARA MÓVILES
+// INICIALIZACIÓN BLINDADA: BLOQUEA EL LOGIN HASTA DESCARGAR LA NUBE
         async function initFirebase() {
-            let splashCompleted = false;
+            const bar = document.getElementById('splashBar');
+            const statusTxt = document.getElementById('syncStatusText');
+            if(statusTxt) statusTxt.innerText = "Conectando con la nube global...";
 
-            // Control de versión estricto para evitar que los celulares retengan datos viejos
-            const APP_VERSION = "v2.5_force_sync";
-            if (localStorage.getItem('jvolt_app_ver') !== APP_VERSION) {
-                localStorage.clear();
-                localStorage.setItem('jvolt_app_ver', APP_VERSION);
-            }
-
-            const finishSplash = () => {
-                if (splashCompleted) return;
-                splashCompleted = true;
-                const bar = document.getElementById('splashBar');
+            const openLoginScreen = () => {
                 if(bar) bar.style.width = '100%';
                 setTimeout(() => {
                     const splash = document.getElementById('splashScreen');
@@ -27,8 +19,6 @@
                 }, 300);
             };
 
-            setTimeout(finishSplash, 2000);
-
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
@@ -37,12 +27,11 @@
                 await signInAnonymously(auth);
                 cloudUser = auth.currentUser;
                 isCloudConnected = true;
-                
-                const statusTxt = document.getElementById('syncStatusText');
-                if(statusTxt) statusTxt.innerText = "Sincronización Cloud Global Activa";
-                
+                if(statusTxt) statusTxt.innerText = "Sincronizando datos con el servidor...";
+
                 const docRef = doc(db, 'jvolt_taller_data', 'master_state');
                 
+                // ESCUCHA ACTIVA: Espera obligatoriamente a traer los datos de la nube antes de dejar entrar
                 onSnapshot(docRef, (docSnap) => {
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data();
@@ -56,14 +45,17 @@
                     } else {
                         setDoc(docRef, { state: window.appState });
                     }
-                    finishSplash();
+                    if(statusTxt) statusTxt.innerText = "¡Sincronización Cloud establecida!";
+                    openLoginScreen();
                 }, (error) => {
-                    console.debug("Firestore snapshot note:", error);
-                    finishSplash();
+                    console.debug("Error de red Firebase:", error);
+                    if(statusTxt) statusTxt.innerText = "Modo Local Activo";
+                    openLoginScreen();
                 });
 
             } catch (e) {
-                console.debug("Firebase init fallback mode:", e);
-                finishSplash();
+                console.debug("Fallo de conexión:", e);
+                if(statusTxt) statusTxt.innerText = "Iniciando modo offline...";
+                openLoginScreen();
             }
         }
