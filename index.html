@@ -37,18 +37,13 @@
             from { opacity: 1; visibility: visible; }
             to { opacity: 0; visibility: hidden; }
         }
-        .fade-out-splash { animation: fade-out 0.6s ease-in-out forwards; }
+        .fade-out-splash { animation: fade-out 0.8s ease-in-out forwards; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen flex flex-col selection:bg-red-600 selection:text-white relative">
-
-    <!-- BOTÓN FLOTANTE DE SINCRONIZACIÓN MANUAL -->
-    <button onclick="globalForceSync()" class="fixed bottom-6 left-6 z-[150] bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-full shadow-2xl flex items-center justify-center border-2 border-blue-400 transition transform hover:scale-105" title="Sincronizar Cloud Ahora">
-        <i class="fa-solid fa-rotate text-xl animate-spin"></i>
-    </button>
 
     <!-- TOAST NOTIFICATIONS -->
     <div id="toast" class="fixed bottom-5 right-5 z-[100] hidden items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border transition-all duration-300 transform translate-y-10 opacity-0">
@@ -84,9 +79,9 @@
 
             <!-- BARRA DE CARGA ANIMADA -->
             <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800 p-0.5">
-                <div id="splashBar" class="bg-gradient-to-r from-blue-600 to-red-600 h-full rounded-full transition-all duration-[1000ms] w-0"></div>
+                <div id="splashBar" class="bg-gradient-to-r from-blue-600 to-red-600 h-full rounded-full transition-all duration-[1500ms] w-0"></div>
             </div>
-            <p id="syncStatusText" class="text-[10px] text-emerald-400 font-mono">Iniciando sistema...</p>
+            <p id="syncStatusText" class="text-[10px] text-emerald-400 font-mono">Conectando a base de datos Cloud Global...</p>
         </div>
     </div>
 
@@ -653,7 +648,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCCB9-IGgFbHOL5-RVTO4ZsGc4Cu7XK5n0",
@@ -733,30 +728,29 @@
         window.activeModalVehicleId = null;
         window.overrideActive = false;
 
-        // INICIALIZACIÓN BLINDADA (Nunca bloquea la interfaz)
-        function finishSplash() {
-            const bar = document.getElementById('splashBar');
-            if(bar) bar.style.width = '100%';
-            setTimeout(() => {
-                const splash = document.getElementById('splashScreen');
-                if(splash) {
-                    splash.classList.add('fade-out-splash');
-                    setTimeout(() => {
-                        splash.style.display = 'none';
-                        const login = document.getElementById('loginScreen');
-                        if(login) login.classList.remove('hidden');
-                    }, 500);
-                }
-            }, 200);
-        }
-
+        // INICIALIZACIÓN AUTOMÁTICA EN LA NUBE PARA TODOS LOS DISPOSITIVOS
         async function initFirebase() {
-            // Forzar apertura en máximo 1.5 segundos pase lo que pase con la red
-            const safetyTimeout = setTimeout(() => {
-                const status = document.getElementById('syncStatusText');
-                if(status) status.innerText = "Modo Local / Sincronización diferida";
-                finishSplash();
-            }, 1500);
+            let splashCompleted = false;
+
+            const finishSplash = () => {
+                if (splashCompleted) return;
+                splashCompleted = true;
+                const bar = document.getElementById('splashBar');
+                if(bar) bar.style.width = '100%';
+                setTimeout(() => {
+                    const splash = document.getElementById('splashScreen');
+                    if(splash) {
+                        splash.classList.add('fade-out-splash');
+                        setTimeout(() => {
+                            splash.style.display = 'none';
+                            const login = document.getElementById('loginScreen');
+                            if(login) login.classList.remove('hidden');
+                        }, 800);
+                    }
+                }, 300);
+            };
+
+            setTimeout(finishSplash, 2000);
 
             try {
                 app = initializeApp(firebaseConfig);
@@ -766,14 +760,13 @@
                 await signInAnonymously(auth);
                 cloudUser = auth.currentUser;
                 isCloudConnected = true;
+                const statusTxt = document.getElementById('syncStatusText');
+                if(statusTxt) statusTxt.innerText = "¡Sincronización Cloud Global establecida!";
                 
-                const status = document.getElementById('syncStatusText');
-                if(status) status.innerText = "¡Conectado a Cloud Global!";
-
                 const docRef = doc(db, 'jvolt_taller_data', 'master_state');
                 
+                // Escucha en tiempo real: cualquier cambio de usuarios, claves o datos en el PC se refleja inmediatamente en el celular
                 onSnapshot(docRef, (docSnap) => {
-                    clearTimeout(safetyTimeout);
                     if (docSnap.exists()) {
                         const cloudData = docSnap.data();
                         if (cloudData && cloudData.state) {
@@ -788,20 +781,21 @@
                     }
                     finishSplash();
                 }, (error) => {
-                    console.debug("Firestore notice:", error);
-                    clearTimeout(safetyTimeout);
+                    console.debug("Firestore snapshot note:", error);
                     finishSplash();
                 });
 
             } catch (e) {
-                console.debug("Offline / Local mode active:", e);
-                clearTimeout(safetyTimeout);
+                console.debug("Firebase init fallback mode:", e);
+                const statusTxt = document.getElementById('syncStatusText');
+                if(statusTxt) statusTxt.innerText = "Modo Local Seguro Activo";
                 finishSplash();
             }
         }
 
         window.syncToCloud = async function() {
             localStorage.setItem('jvolt_master_state', JSON.stringify(window.appState));
+
             if (!isCloudConnected || !db) return;
             try {
                 const docRef = doc(db, 'jvolt_taller_data', 'master_state');
@@ -811,25 +805,8 @@
             }
         };
 
-        window.globalForceSync = async function() {
-            if (!db) { showToast("Modo local activo", "warning"); return; }
-            try {
-                const docRef = doc(db, 'jvolt_taller_data', 'master_state');
-                const snap = await getDoc(docRef);
-                if (snap.exists() && snap.data().state) {
-                    window.appState = snap.data().state;
-                    localStorage.setItem('jvolt_master_state', JSON.stringify(window.appState));
-                    if (window.currentUser) renderApp();
-                    showToast("¡Sincronizado con éxito desde la nube!", "success");
-                }
-            } catch(e) {
-                showToast("Error al forzar sincronización", "warning");
-            }
-        };
-
         window.showToast = function(message, type = 'success') {
             const toast = document.getElementById('toast');
-            if(!toast) return;
             const icon = document.getElementById('toastIcon');
             const msg = document.getElementById('toastMsg');
             msg.innerText = message;
@@ -897,7 +874,6 @@
 
         window.renderUsersList = function() {
             const container = document.getElementById('usersListDisplay');
-            if(!container) return;
             container.innerHTML = '';
             window.appState.users.forEach((u, idx) => {
                 let badgeColor = u.role === 'admin' ? 'bg-red-900/50 text-red-300 border-red-600' :
@@ -988,7 +964,7 @@
             }
         };
 
-        // --- SOLICITUD DE ACTUALIZACIÓN ---
+        // --- SOLICITUD DE ACTUALIZACIÓN (ADMIN/OPS A TÉCNICO) ---
         window.requestTechUpdate = function(id) {
             const v = window.appState.vehicles.find(x => x.id === id);
             if(v) {
@@ -1019,32 +995,32 @@
             const overrideBadge = document.getElementById('overrideBadge');
 
             if(window.currentUser.role === 'admin') {
-                if(adminOnlyButtons) adminOnlyButtons.classList.remove('hidden');
-                if(adminOpsExtraButtons) adminOpsExtraButtons.classList.remove('hidden');
-                if(opsOverrideContainer) opsOverrideContainer.classList.add('hidden');
+                adminOnlyButtons.classList.remove('hidden');
+                adminOpsExtraButtons.classList.remove('hidden');
+                opsOverrideContainer.classList.add('hidden');
             } else if(window.currentUser.role === 'ops') {
-                if(adminOnlyButtons) adminOnlyButtons.classList.add('hidden');
-                if(adminOpsExtraButtons) adminOpsExtraButtons.classList.remove('hidden');
-                if(opsOverrideContainer) opsOverrideContainer.classList.remove('hidden');
+                adminOnlyButtons.classList.add('hidden');
+                adminOpsExtraButtons.classList.remove('hidden');
+                opsOverrideContainer.classList.remove('hidden');
             } else {
-                if(adminOnlyButtons) adminOnlyButtons.classList.add('hidden');
-                if(adminOpsExtraButtons) adminOpsExtraButtons.classList.add('hidden');
-                if(opsOverrideContainer) opsOverrideContainer.classList.add('hidden');
+                adminOnlyButtons.classList.add('hidden');
+                adminOpsExtraButtons.classList.add('hidden');
+                opsOverrideContainer.classList.add('hidden');
             }
 
-            if(window.overrideActive) { if(overrideBadge) overrideBadge.classList.remove('hidden'); }
-            else { if(overrideBadge) overrideBadge.classList.add('hidden'); }
+            if(window.overrideActive) overrideBadge.classList.remove('hidden');
+            else overrideBadge.classList.add('hidden');
 
             let displayVehicles = window.appState.vehicles;
 
             if (window.currentUser.role === 'tech') {
                 displayVehicles = window.appState.vehicles.filter(v => v.techAssigned === window.currentUser.email);
-                if(dashboard) dashboard.classList.remove('hidden');
+                dashboard.classList.remove('hidden');
             } else if (window.currentUser.role === 'client') {
                 displayVehicles = window.appState.vehicles.filter(v => v.clientId === window.currentUser.id || v.clientId === window.currentUser.email);
-                if(dashboard) dashboard.classList.add('hidden'); 
+                dashboard.classList.add('hidden'); 
             } else {
-                if(dashboard) dashboard.classList.remove('hidden');
+                dashboard.classList.remove('hidden');
             }
 
             if (window.currentUser.role !== 'client') {
@@ -1060,7 +1036,6 @@
             }
 
             const listContainer = document.getElementById('vehiclesList');
-            if(!listContainer) return;
             listContainer.innerHTML = '';
 
             if (displayVehicles.length === 0) {
@@ -1210,6 +1185,7 @@
             const isPending = v.status === 'Pendiente Asignación';
 
             let clientObj = window.appState.clients.find(c => c.id === v.clientId);
+            let clientNameDisplay = clientObj ? `${clientObj.name} (${v.clientId})` : v.clientId;
             const canAssign = isOps || (isAdmin && window.overrideActive);
 
             div.innerHTML = `
@@ -1280,7 +1256,6 @@
 
         window.renderClientsList = function() {
             const list = document.getElementById('clientsListDisplay');
-            if(!list) return;
             list.innerHTML = '';
             window.appState.clients.forEach(c => {
                 list.innerHTML += `<div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-2.5 rounded-lg"><div><span class="font-bold text-blue-400">${c.id}</span> - <span class="text-slate-200">${c.name}</span><p class="text-[10px] text-slate-400">RUT: ${c.rut}</p></div><button onclick="deleteClient('${c.id}')" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
@@ -1312,7 +1287,6 @@
 
         window.renderMajorPartsList = function() {
             const container = document.getElementById('majorPartsListDisplay');
-            if(!container) return;
             container.innerHTML = '';
             window.appState.majorParts.forEach(m => {
                 container.innerHTML += `<div class="bg-slate-900 border border-slate-700 p-3 rounded-xl space-y-1"><div class="flex justify-between"><span class="text-cyan-400 font-bold">${m.name}</span><button onclick="deleteMajorPart(${m.id})" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div><p class="text-[11px] text-slate-300">${m.details}</p></div>`;
@@ -1345,7 +1319,6 @@
 
         window.renderProceduresList = function() {
             const list = document.getElementById('proceduresListDisplay');
-            if(!list) return;
             list.innerHTML = '';
             window.appState.procedures.forEach(p => {
                 list.innerHTML += `<div class="flex justify-between items-center bg-slate-900 border border-slate-700 p-2.5 rounded-lg"><div><strong class="text-indigo-400 font-mono">${p.code}</strong><p class="text-slate-200 text-[11px]">${p.desc}</p></div><button onclick="deleteProcedure('${p.id}')" class="text-slate-500 hover:text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
@@ -1372,7 +1345,6 @@
 
         window.openNewVehicleModal = function() {
             const select = document.getElementById('nvClientSelect');
-            if(!select) return;
             select.innerHTML = '<option value="">-- Seleccione Cliente --</option>';
             window.appState.clients.forEach(c => { select.innerHTML += `<option value="${c.id}">ID: ${c.id} - ${c.name}</option>`; });
             document.getElementById('modalNewVehicle').classList.remove('hidden');
@@ -1460,7 +1432,6 @@
         window.renderServiceStepsList = function() {
             const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
             const container = document.getElementById('stepsListContainer');
-            if(!container) return;
             container.innerHTML = '';
             if(!v.serviceSteps) v.serviceSteps = [];
             v.serviceSteps.forEach((s, idx) => {
@@ -1500,13 +1471,10 @@
         window.renderReportRunList = function() {
             const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
             const container = document.getElementById('reportRunItemsContainer');
-            if(!container) return;
             container.innerHTML = '';
             const count = v.reportRunItems ? v.reportRunItems.length : 0;
-            const badge = document.getElementById('photoCountBadge');
-            const display = document.getElementById('photoCountDisplay');
-            if(badge) badge.innerText = count;
-            if(display) display.innerText = count;
+            document.getElementById('photoCountBadge').innerText = count;
+            document.getElementById('photoCountDisplay').innerText = count;
 
             if(!v.reportRunItems || count === 0) {
                 container.innerHTML = `<div class="col-span-2 bg-slate-900/60 p-8 rounded-xl text-center text-slate-400">Sin evidencias fotográficas. Sube hasta 30 fotos.</div>`;
@@ -1605,7 +1573,6 @@
         window.renderAdminPartsList = function() {
             const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
             const list = document.getElementById('partsListAdmin');
-            if(!list) return;
             list.innerHTML = '';
             v.parts.forEach(p => {
                 list.innerHTML += `<div class="flex justify-between items-center bg-slate-900 border p-2 rounded"><span class="text-slate-200">${p.name} (${p.status})</span><button onclick="removePart(${p.id})" class="text-red-400"><i class="fa-solid fa-trash"></i></button></div>`;
@@ -1671,7 +1638,6 @@
         window.renderChatMsgs = function() {
             const v = window.appState.vehicles.find(x => x.id === window.activeModalVehicleId);
             const box = document.getElementById('chatMessagesBox');
-            if(!box) return;
             box.innerHTML = '';
             if(!v.chat || v.chat.length === 0) { box.innerHTML = '<p class="text-slate-500 italic text-center">Sin mensajes.</p>'; return; }
             v.chat.forEach(m => {
